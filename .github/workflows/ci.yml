@@ -26,7 +26,8 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -B build -DPython_EXECUTABLE="${{ steps.python.outputs.python-path }}" -DCMAKE_BUILD_TYPE=Release
+          $pythonPath = (Get-Command python).Source
+          cmake -B build -DPython_EXECUTABLE="$pythonPath" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release

@@ -1,10 +1,10 @@
 # Pattern Matching ETF Strategy — Python+C++ Hybrid Programming Refactor
 
+[![CI](https://github.com/redamancy231-create/etf-pattern-match-pybind11/actions/workflows/ci.yml/badge.svg)](https://github.com/redamancy231-create/etf-pattern-match-pybind11/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
 [![C++](https://img.shields.io/badge/C++-20-00599C)](https://en.cppreference.com/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-064F8C)](https://cmake.org/)
 [![pybind11](https://img.shields.io/badge/pybind11-3.0.4-green)](https://github.com/pybind/pybind11)
-[![tests](https://img.shields.io/badge/tests-54%20passed-brightgreen)](tests/)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 [中文简介](#中文简介) | [English](#english-summary)
