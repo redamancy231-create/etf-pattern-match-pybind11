@@ -22,6 +22,7 @@
 ## Build
 - [CMakeLists.txt](../CMakeLists.txt) — top-level CMake configuration
 - [src/cpp/CMakeLists.txt](../src/cpp/CMakeLists.txt) — C++ subdirectory CMake
+- [ci.yml](../.github/workflows/ci.yml) — GitHub Actions CI (Windows + MSVC)
 
 ## Documentation
 - [README.md](../README.md) — GitHub homepage

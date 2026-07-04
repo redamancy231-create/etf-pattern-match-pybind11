@@ -1,8 +1,10 @@
 ## 项目状态: 形态匹配ETF策略-pybind11
 
-- 当前阶段: ✅ 已发布
+- 当前阶段: ✅ 已发布 + 页面改进完成
 - GitHub: https://github.com/redamancy231-create/etf-pattern-match-pybind11
 - 发布日期: 2026-07-04
+- 本轮完成: 页面改进（双语 README + FAQ + Mermaid + Benchmark Scope + CI workflow + docs 重组）+ GitHub MCP 配置诊断
+- 发现的问题: GitHub MCP 配置指向 Copilot MCP 不可用，需改用 @anthropic-ai/mcp-server-github（stdio）；CI 首次运行待验证
 
 ### 已完成
 
@@ -22,6 +24,13 @@
 | 清理 | 绝对路径全清 + 审查文件排除 + 死链删除 | DeepSeek-V4-Pro |
 | LICENSE | MIT 许可证 | DeepSeek-V4-Pro |
 | 发布 | Git 初始提交 + GitHub 仓库 + push | Acerolaorion |
+| 页面改进 | 双语 README + FAQ + Mermaid 图 + CI workflow + docs 重组 | DeepSeek + GPT-5.5 |
+
+### 待完成
+
+- 验证 CI 首次运行结果 → ✅ 已跑通 (2026-07-04)
+- 配置 GitHub MCP（`~/.claude/mcp.json` 改用 stdio + `@anthropic-ai/mcp-server-github`）→ P1 → 下次会话前手动执行
+- 设置 GitHub About 和 Topics → P2 → 可等 MCP 可用后自动设置，或手动去 Settings 页面设置
 
 ### 环境约束
 
@@ -30,3 +39,9 @@
 - pybind11: 3.0.4
 - 平台: Windows 11 + Git Bash
 - 编码: UTF-8, `PYTHONIOENCODING=utf-8` 前缀
+
+### 会话备注 (2026-07-04)
+
+- **CI 首次运行**：✅ 已跑通，badge 已变绿
+- **GitHub MCP 不可用**：`~/.claude/mcp.json` 指向 Copilot MCP（`api.githubcopilot.com`），需改为 stdio + `@anthropic-ai/mcp-server-github`；详见 [[reference_github_mcp_config]]
+- **仓库地址**：实际发布在 `redamancy231-create`，非最初计划的 `Acerolaorion`；所有文档中 URL 已统一
