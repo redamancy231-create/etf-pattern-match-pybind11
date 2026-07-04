@@ -39,6 +39,10 @@ PYTHONIOENCODING=utf-8 python -m pytest tests/ -v
 │   ├── etf_core.cpp           # Unified C++ module (7 functions)
 │   └── pyi/etf_core.pyi       # Type stubs
 ├── tests/                     # 54 tests, 0 failures
+├── docs/
+│   ├── file-index.md           # Key file index
+│   └── reviews/                # Design documents (zh-CN)
+├── .github/workflows/ci.yml    # CI (Windows + MSVC)
 ├── verify_etf_core.py         # C++ vs Python consistency verification
 ├── CMakeLists.txt
 └── CLAUDE.md
