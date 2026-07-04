@@ -147,6 +147,19 @@ Extracted from **Pattern Matching ETF Strategy V3.3** (archived baseline, 3,836 
 
 所有源文件均标注模型来源。All source files are annotated with model provenance.
 
+## 关联项目 | Related Projects
+
+| 项目 Project | 关系 Relationship |
+|------|------|
+| [**AI 协作框架**](https://github.com/redamancy231-create/ai-collaboration-framework) | **方法论上游**——本项目的多后端审查、被动观测记录、项目闭合协议均源自该框架 |
+| | **Methodology upstream** — multi-model review, passive observation, and project closure protocols originate from this framework |
+| [**Independent Review Toolkit**](https://github.com/redamancy231-create/independent-review-toolkit) | **审查方法来源**——本项目的 Kimi + GPT-5.5 四轮异后端审查使用了该工具包的 SOP |
+| | **Review methodology source** — the four-round Kimi + GPT-5.5 cross-backend review followed this toolkit's SOP |
+| [**Prompt-TDD Methodology**](https://github.com/redamancy231-create/prompt-tdd-methodology) | **同级项目**——将对照实验方法论应用于 prompt 工程；本项目在 pybind11/C++ 混合编程方向上应用了类似的方法学严谨性 |
+| | **Sibling project** — controlled experiment methodology for prompt engineering; this project applies similar methodological rigor to pybind11/C++ hybrid programming |
+| [**M&A Case Study Pipeline**](https://github.com/redamancy231-create/ma-case-study-pipeline) | **同级项目**——多模型学术生产流水线；同样强调方法的可移植性和跨后端验证 |
+| | **Sibling project** — multi-model academic production pipeline; shares emphasis on methodology portability and cross-backend verification |
+
 ## 详细文档 | Detailed Documentation
 
 开发笔记与 pybind11 实战经验：[CLAUDE.md](CLAUDE.md) — 构建细节、ABI 排错、GIL 管理、浮点容差、审查追溯。
