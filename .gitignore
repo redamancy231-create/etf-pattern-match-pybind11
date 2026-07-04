@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# C++ / pybind11
+build/
+*.pyd
+*.exp
+*.lib
+*.obj
+*.dll
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 掘金平台（不可发布）
+*gm_token*
+*GM_TOKEN*
+.env
+
+# 模型缓存
+model_cache/
+*.pkl
+*.md5
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Internal review artifacts (not for release)
+审查提示词/
+_translation_output.md
