@@ -146,5 +146,17 @@ using ArrI64 = py::array_t<int64_t, py::array::c_style | py::array::forcecast>;
 
 ## 关联项目 | Related Projects
 
-- 父项目 Parent project（形态匹配ETF策略 V3.3）— 归档基线 archived baseline (CLOSED)
-- pybind11-demo — pybind11 经验来源 source of pybind11 experience (CLOSED)
+| 项目 Project | 关系 Relationship |
+|------|------|
+| [**AI 协作框架**](https://github.com/redamancy231-create/ai-collaboration-framework) | **方法论上游**——多后端审查、被动观测记录、项目闭合协议均源自该框架 |
+| | **Methodology upstream** — multi-model review, passive observation, and project closure protocols originate from this framework |
+| [**Independent Review Toolkit**](https://github.com/redamancy231-create/independent-review-toolkit) | **审查方法来源**——Kimi + GPT-5.5 四轮异后端审查使用了该工具包的 SOP |
+| | **Review methodology source** — four-round Kimi + GPT-5.5 cross-backend review followed this toolkit's SOP |
+| [**Prompt-TDD Methodology**](https://github.com/redamancy231-create/prompt-tdd-methodology) | **同级项目**——对照实验方法论应用于 prompt 工程；本项目在 pybind11/C++ 方向上应用了类似的方法学严谨性 |
+| | **Sibling project** — controlled experiment methodology for prompt engineering; similar methodological rigor applied to pybind11/C++ hybrid programming |
+| [**M&A Case Study Pipeline**](https://github.com/redamancy231-create/ma-case-study-pipeline) | **同级项目**——多模型学术生产流水线；同样强调方法的可移植性和跨后端验证 |
+| | **Sibling project** — multi-model academic production pipeline; shares emphasis on methodology portability and cross-backend verification |
+| 形态匹配 ETF 策略 V3.3（归档基线） | **上游来源**——纯计算模块的提取源；归档后不可重跑 |
+| | **Upstream source** — extraction source for pure computation modules; archived, backtests must not be rerun |
+| pybind11-demo（归档） | **pybind11 经验来源**——arg 计数/GIL/ABI 对齐等关键经验来自该项目 |
+| | **pybind11 experience source** — arg counting/GIL/ABI alignment lessons originate from this project |
