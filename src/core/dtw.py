@@ -102,7 +102,7 @@ def dtw_distance_batch(
     candidates: np.ndarray,
     window: int = 5,
     top_k: Optional[int] = None,
-) -> np.ndarray:
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     批量 DTW：一个 query 对多个 candidates。
 
