@@ -3,7 +3,7 @@
 - 当前阶段: ✅ 已发布（v1.0.0）
 - GitHub: https://github.com/redamancy231-create/etf-pattern-match-pybind11
 - 发布日期: 2026-07-04
-- 最后更新: 2026-07-04（页面全面双语化 + 仓库设置完善 + 五项目交叉链接 + Social Preview）
+- 最后更新: 2026-07-05（LSP 代码分析 + dtw_distance_batch 返回类型修正）
 
 ### 已完成
 
@@ -30,6 +30,7 @@
 | 页面 | Social Preview 图片（深蓝渐变 + 数据卡片 + 技术栈标签） | DeepSeek-V4-Pro |
 | 页面 | Issue 模板（Bug Report + Question） | DeepSeek-V4-Pro |
 | 版本 | v1.0.0 tag | Acerolaorion |
+| 修复 | dtw_distance_batch 返回类型注解修正（`-> np.ndarray` → `-> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]`） | DeepSeek-V4-Pro |
 
 ### 待完成
 
@@ -48,6 +49,12 @@
 - pybind11: 3.0.4
 - 平台: Windows 11 + Git Bash
 - 编码: UTF-8, `PYTHONIOENCODING=utf-8` 前缀
+
+### 会话备注 (2026-07-05)
+
+- **LSP 代码分析**：对全部 14 源文件执行 pyright documentSymbol + hover + findReferences + 诊断分析。LSP 的 findReferences/hover 对本项目索引不完整，采用混合策略（LSP 符号浏览 + grep 跨模块依赖 + 源码通读）。产出完整架构分析（依赖图/模块功能矩阵/C++ vs Python 覆盖对比）。
+- **dtw_distance_batch 返回类型修正**：pyright 报告 `Union` 未使用——实为返回类型签名不准确（`-> np.ndarray` 但 top_k 模式返回 tuple）。修正为 `-> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]`。54 测试全部通过，已 rebase + push。
+- **pyright 诊断分类**：12 项中 8 项为 strict 模式误报（pandas 动态类型/sorted key=dict.get），3 项为已知设计选择，1 项为真 bug（已修）。
 
 ### 会话备注 (2026-07-04)
 
