@@ -95,8 +95,7 @@ jupyter notebook notebooks/etf_pattern_matching_demo.ipynb
 │   ├── risk_controls.py        # Risk control rules (pure computation)
 │   └── metrics.py              # Sortino / Calmar / IC statistics
 ├── src/cpp/
-├── src/cpp/
-│   ├── etf_core.cpp            # Unified C++ acceleration module (7 functions, ~1,000 lines)
+│   ├── etf_core.cpp            # Unified C++ acceleration module (8 functions, ~1,100 lines)
 │   └── pyi/etf_core.pyi        # Type stubs
 ├── tests/                      # 54 unit tests
 ├── notebooks/
