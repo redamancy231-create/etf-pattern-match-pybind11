@@ -45,8 +45,8 @@ Core single-call speedups reach 37x–61x, while batch matching (C++ single ×10
 
 > ¹ Batch row compares 100 C++ single calls vs 1 C++ batch call — a measure of batch-interface overhead reduction, not Python-vs-C++ speedup.
 
-> **详细分析**：2.2x 和 58x 之间的差距不是 bug，是 Amdahl's Law。见 [性能分析短文](docs/performance-analysis.md)（中英双语）。
-> **Detailed analysis**: why 58× becomes 2.2× end-to-end, explained via Amdahl's Law. See [performance analysis article](docs/performance-analysis.md) (bilingual).
+> **详细分析**：单次调用 61× 加速落到批量场景只剩 2.2×——这不是 bug，是 Amdahl's Law。见 [性能分析短文](docs/performance-analysis.md)（中英双语）。
+> **Detailed analysis**: why 61× single-call speedup becomes 2.2× in batch workloads — not a bug, it's Amdahl's Law. See [performance analysis article](docs/performance-analysis.md) (bilingual).
 
 ### 基准测试范围 | Benchmark Scope
 
@@ -128,7 +128,7 @@ No. This repository is a programming practice project for extracting pure comput
 
 </details>
 
-### 为什么批量加速（2.2x）远低于单次调用加速（58x）？| Why is batch speedup (2.2x) much lower than single-call speedup (58x)?
+### 为什么批量加速（2.2x）远低于单次调用加速（61x）？| Why is batch speedup (2.2x) much lower than single-call speedup (61x)?
 
 Single-call pattern matching measures the hot compute kernel in isolation. Batch matching includes orchestration, data movement, validation, and Python/C++ boundary costs. The precomputed window cache helps, but end-to-end throughput is bounded by these overheads.
 
