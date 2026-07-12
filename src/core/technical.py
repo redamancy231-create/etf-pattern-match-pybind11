@@ -125,9 +125,20 @@ def compute_sector_rotation(
     curr_vals_arr = np.array([curr_returns[k] for k in common], dtype=np.float64)
 
     # 使用平均秩（处理并列值），避免 PYTHONHASHSEED 导致的不确定排序
-    from scipy.stats import rankdata
-    prev_rank_vals = rankdata(prev_vals_arr, method="average")
-    curr_rank_vals = rankdata(curr_vals_arr, method="average")
+    # 纯 NumPy 实现，等价于 scipy.stats.rankdata(x, method="average")
+    def _average_rank(x: np.ndarray) -> np.ndarray:
+        sorter = np.argsort(x)
+        sorted_vals = x[sorter]
+        different = np.concatenate([[True], sorted_vals[1:] != sorted_vals[:-1], [True]])
+        diff_idx = np.flatnonzero(different)
+        counts = np.diff(diff_idx)
+        avg_ranks = diff_idx[:-1] + (counts - 1) / 2.0 + 1.0
+        ranks = np.empty(len(x), dtype=np.float64)
+        ranks[sorter] = np.repeat(avg_ranks, counts)
+        return ranks
+
+    prev_rank_vals = _average_rank(prev_vals_arr)
+    curr_rank_vals = _average_rank(curr_vals_arr)
 
     rho = np.corrcoef(prev_rank_vals, curr_rank_vals)[0, 1]
     if np.isnan(rho):
