@@ -36,6 +36,25 @@ def dtw_distance(x: np.ndarray, y: np.ndarray, window: int = 5) -> float:
     ...
 
 
+from typing import overload, Tuple
+
+@overload
+def dtw_distance_batch(
+    query: np.ndarray, candidates: np.ndarray,
+    window: int = 5, top_k: int = 0,
+) -> np.ndarray:
+    """top_k <= 0: 返回全部 distances (N,)."""
+    ...
+
+@overload
+def dtw_distance_batch(
+    query: np.ndarray, candidates: np.ndarray,
+    window: int = 5, top_k: int = ...,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """top_k > 0: 返回 (indices, distances) 各 (top_k,)."""
+    ...
+
+
 def compute_adx(
     high: np.ndarray, low: np.ndarray, close: np.ndarray, n: int = 14
 ) -> float:

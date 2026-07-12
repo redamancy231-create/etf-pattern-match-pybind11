@@ -62,19 +62,17 @@ class TestStandardizeReturns:
         assert not np.any(np.isnan(result))
 
     # v2 新增: 真实 NaN 边界测试 (GPT-5.5 完备性审查 P1)
+    # 2026-07-12 修订: standardize_returns 已改为窗口级非有限值检查，
+    # 任一价格为 NaN/Inf 即返回空数组，因此以下测试改为验证新契约。
     def test_nan_value_in_array(self):
-        """数组中含 np.nan — maximum 会将 NaN 替换为 1e-12，不产生 NaN 收益"""
+        """数组中含 np.nan — 窗口级检查应返回空数组"""
         result = standardize_returns(np.array([100.0, np.nan, 101.0]))
-        # np.maximum(nan, 1e-12)=1e-12 → log(1e-12)≈-27.6 → 2个有效收益率
-        assert len(result) == 2
-        assert not np.any(np.isnan(result))
+        assert len(result) == 0
 
     def test_all_nan(self):
-        """全 NaN — maximum 全部替换为 1e-12 → 恒定序列 → 去均值后全零"""
+        """全 NaN — 窗口级检查应返回空数组"""
         result = standardize_returns(np.array([np.nan, np.nan]))
-        # maximum → [1e-12, 1e-12] → diff=0 → 1个零收益率
-        assert len(result) == 1
-        assert result[0] == 0.0
+        assert len(result) == 0
 
     def test_zero_then_valid(self):
         """价格为0后被clip — 验证clip不产生NaN"""

@@ -33,9 +33,11 @@ Synthetic data is appropriate here because the target is execution cost, not mar
 
 | Function | Python | C++ | Speedup |
 |----------|--------|-----|:---:|
-| DTW Distance (L=19) | 125 µs | 2.9 µs | **43×** |
-| Single Pattern Match | 15.3 ms | 0.3 ms | **58×** |
-| Batch Match (×100) | 50 ms | 23 ms | **2.2×** |
+| DTW Distance (L=19) | 98 µs | 2.7 µs | **37×** |
+| Single Pattern Match | 14.3 ms | 0.23 ms | **61×** |
+| Batch Match (×100) | 50 ms¹ | 23 ms | **2.2×¹** |
+
+> ¹ Batch row compares 100 C++ single calls vs 1 C++ batch call — a measure of batch-interface overhead reduction, not Python-vs-C++ speedup. The 50 ms baseline is 100 × C++ `pattern_match_single`, not 100 × Python.
 
 ### 3.1 Layer 1 — Micro: one computational kernel
 
@@ -173,9 +175,11 @@ A stacked horizontal bar chart should compare two rows. The top row, **<code>Pyt
 
 | 函数 | Python | C++ | 加速比 |
 |----------|--------|-----|:---:|
-| DTW 距离（L=19） | 125 µs | 2.9 µs | **43×** |
-| 单次形态匹配 | 15.3 ms | 0.3 ms | **58×** |
-| 批量匹配（×100） | 50 ms | 23 ms | **2.2×** |
+| DTW 距离（L=19） | 98 µs | 2.7 µs | **37×** |
+| 单次形态匹配 | 14.3 ms | 0.23 ms | **61×** |
+| 批量匹配（×100） | 50 ms¹ | 23 ms | **2.2×¹** |
+
+> ¹ 批量行比较的是 100 次 C++ 单次调用 vs 1 次 C++ 批量调用——衡量批量接口开销降低，非 Python vs C++ 加速比。50 ms 基线为 100 × C++ `pattern_match_single`，非 100 × Python。
 
 ### 3.1 第一层——微观：单个计算内核
 

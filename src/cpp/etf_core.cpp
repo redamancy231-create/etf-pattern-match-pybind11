@@ -9,6 +9,8 @@
  * >   Kimi-K2.7-Code (via Kimi Code CLI), 2026-07-03:
  * >     pattern_match_batch, cosine_similarity_vec, dtw_distance_vec,
  * >     compute_pattern_features_cpp, 预计算缓存架构, v3 修订
+ * >   DeepSeek-V4-Pro (via Claude Code CLI), 2026-07-12:
+ * >     dtw_distance_batch, 模块绑定
  *
  * 来源: 形态匹配ETF组合策略_V3.3.py
  *   - dtw_distance:         行 339-359
@@ -58,23 +60,27 @@ using ArrI64 = py::array_t<int64_t, py::array::c_style | py::array::forcecast>;
 
 std::vector<double> standardize_returns_cpp(const double* prices, py::ssize_t n) {
     if (n < 2) {
-        return std::vector<double>(std::max(py::ssize_t(0), n - 1), 0.0);
+        return {};  // 返回空向量表示无效窗口
     }
 
-    // 计算对数收益率
+    // 窗口级检查：任一价格为非有限值 → 整个窗口无效
+    for (py::ssize_t i = 0; i < n; ++i) {
+        if (!std::isfinite(prices[i])) {
+            return {};
+        }
+    }
+
+    // 计算对数收益率（所有价格已通过有限性检查，长度固定为 n-1）
     std::vector<double> rets;
     rets.reserve(n - 1);
     for (py::ssize_t i = 1; i < n; ++i) {
         double p_prev = std::max(prices[i - 1], 1e-12);
         double p_curr = std::max(prices[i], 1e-12);
-        double r = std::log(p_curr / p_prev);
-        if (!std::isnan(r)) {
-            rets.push_back(r);
-        }
+        rets.push_back(std::log(p_curr / p_prev));
     }
 
     if (rets.empty()) {
-        return std::vector<double>(std::max(py::ssize_t(0), n - 1), 0.0);
+        return {};
     }
 
     // 去均值
@@ -98,10 +104,15 @@ std::vector<double> standardize_returns_cpp(const double* prices, py::ssize_t n)
 ArrD standardize_returns(ArrD price_series) {
     auto buf = price_series.unchecked<1>();
     py::ssize_t n = buf.shape(0);
+    const double* ptr = buf.data(0);
 
-    auto result_vec = standardize_returns_cpp(buf.data(0), n);
+    std::vector<double> result_vec;
+    {
+        py::gil_scoped_release release;
+        result_vec = standardize_returns_cpp(ptr, n);
+    }
+
     py::ssize_t m = static_cast<py::ssize_t>(result_vec.size());
-
     ArrD result(m);
     auto res_buf = result.mutable_unchecked<1>();
     for (py::ssize_t i = 0; i < m; ++i) {
@@ -123,11 +134,18 @@ double cosine_similarity(ArrD x_arr, ArrD y_arr) {
         throw std::invalid_argument("x and y must have same length");
     }
 
-    double dot = 0.0, norm_x2 = 0.0, norm_y2 = 0.0;
-    for (py::ssize_t i = 0; i < n; ++i) {
-        dot += x(i) * y(i);
-        norm_x2 += x(i) * x(i);
-        norm_y2 += y(i) * y(i);
+    const double* xp = x.data(0);
+    const double* yp = y.data(0);
+
+    double dot, norm_x2, norm_y2;
+    {
+        py::gil_scoped_release release;
+        dot = 0.0; norm_x2 = 0.0; norm_y2 = 0.0;
+        for (py::ssize_t i = 0; i < n; ++i) {
+            dot += xp[i] * yp[i];
+            norm_x2 += xp[i] * xp[i];
+            norm_y2 += yp[i] * yp[i];
+        }
     }
 
     double norm_x = std::sqrt(norm_x2);
@@ -142,6 +160,44 @@ double cosine_similarity(ArrD x_arr, ArrD y_arr) {
 // 第三部分: DTW 距离 (V3.3.py 行 339-359)
 // ═══════════════════════════════════════════════════════════════
 
+// Span版 DTW 距离（零拷贝 + 滚动双行数组，O(m) 内存）
+// 供 public API 和内部批量函数共用
+double dtw_distance_span(const double* x, py::ssize_t n,
+                          const double* y, py::ssize_t m,
+                          int window = 5) {
+    if (n == 0 || m == 0) return std::numeric_limits<double>::infinity();
+
+    int band = std::max(window, static_cast<int>(std::abs(n - m)));
+    const double INF = std::numeric_limits<double>::infinity();
+
+    std::vector<double> prev(m + 1, INF);
+    std::vector<double> curr(m + 1, INF);
+    prev[0] = 0.0;
+
+    for (py::ssize_t i = 1; i <= n; ++i) {
+        py::ssize_t j_start = std::max(py::ssize_t(1), i - band);
+        py::ssize_t j_end = std::min(m, i + band);
+
+        for (py::ssize_t j = j_start; j <= j_end; ++j) {
+            double cost = x[i - 1] - y[j - 1];
+            cost *= cost;
+
+            double pj = (std::abs((i - 1) - j) <= band) ? prev[j] : INF;
+            double cj = (j > j_start) ? curr[j - 1] : INF;
+            double pj1 = prev[j - 1];
+
+            curr[j] = cost + std::min({pj, cj, pj1});
+        }
+
+        std::swap(prev, curr);
+        // dtw[i][0] = INF for all i > 0（prev[0] 经 swap 可能残留 0.0）
+        prev[0] = INF;
+    }
+
+    double path_len = static_cast<double>(n + m);
+    return (path_len > 0) ? std::sqrt(prev[m]) / path_len : INF;
+}
+
 double dtw_distance(ArrD x_arr, ArrD y_arr, int window = 5) {
     auto x = x_arr.unchecked<1>();
     auto y = y_arr.unchecked<1>();
@@ -150,35 +206,11 @@ double dtw_distance(ArrD x_arr, ArrD y_arr, int window = 5) {
 
     if (n == 0 || m == 0) return std::numeric_limits<double>::infinity();
 
-    int band = std::max(window, static_cast<int>(std::abs(n - m)));
-
-    // DTW 矩阵和计算在 GIL 释放区执行
     double result;
     {
         py::gil_scoped_release release;
-
-        std::vector<double> dtw_data((n + 1) * (m + 1), std::numeric_limits<double>::infinity());
-        auto dtw = [&](py::ssize_t i, py::ssize_t j) -> double& {
-            return dtw_data[i * (m + 1) + j];
-        };
-
-        dtw(0, 0) = 0.0;
-
-        for (py::ssize_t i = 1; i <= n; ++i) {
-            py::ssize_t j_start = std::max(py::ssize_t(1), i - band);
-            py::ssize_t j_end = std::min(m + 1, i + band + 1);
-            for (py::ssize_t j = j_start; j < j_end; ++j) {
-                double cost = (x(i - 1) - y(j - 1));
-                cost *= cost;
-                double prev = std::min({dtw(i - 1, j), dtw(i, j - 1), dtw(i - 1, j - 1)});
-                dtw(i, j) = cost + prev;
-            }
-        }
-
-        double path_len = static_cast<double>(n + m);
-        result = (path_len > 0) ? std::sqrt(dtw(n, m)) / path_len
-                                : std::numeric_limits<double>::infinity();
-    } // GIL 在此重获
+        result = dtw_distance_span(x.data(0), n, y.data(0), m, window);
+    }
 
     return result;
 }
@@ -188,6 +220,9 @@ double dtw_distance(ArrD x_arr, ArrD y_arr, int window = 5) {
 // ═══════════════════════════════════════════════════════════════
 
 double compute_adx(ArrD high_arr, ArrD low_arr, ArrD close_arr, int n = 14) {
+    if (n <= 0) {
+        throw std::invalid_argument("n must be > 0, got " + std::to_string(n));
+    }
     auto high = high_arr.unchecked<1>();
     auto low  = low_arr.unchecked<1>();
     auto close = close_arr.unchecked<1>();
@@ -222,7 +257,9 @@ double compute_adx(ArrD high_arr, ArrD low_arr, ArrD close_arr, int n = 14) {
             std::vector<double> smoothed(tr_len, 0.0);
             double init_sum = 0.0;
             for (int i = 0; i < n; ++i) init_sum += raw[i];
-            smoothed[n - 1] = init_sum / n;
+            // Fill first n positions with initial mean (match Python behaviour)
+            double init_mean = init_sum / n;
+            for (int i = 0; i < n; ++i) smoothed[i] = init_mean;
             for (py::ssize_t i = n; i < tr_len; ++i) {
                 smoothed[i] = (smoothed[i - 1] * (n - 1) + raw[i]) / n;
             }
@@ -252,6 +289,9 @@ double compute_adx(ArrD high_arr, ArrD low_arr, ArrD close_arr, int n = 14) {
 // ═══════════════════════════════════════════════════════════════
 
 ArrD compute_atr(ArrD high_arr, ArrD low_arr, ArrD close_arr, int n = 14) {
+    if (n <= 0) {
+        throw std::invalid_argument("n must be > 0, got " + std::to_string(n));
+    }
     auto high = high_arr.unchecked<1>();
     auto low  = low_arr.unchecked<1>();
     auto close = close_arr.unchecked<1>();
@@ -269,26 +309,34 @@ ArrD compute_atr(ArrD high_arr, ArrD low_arr, ArrD close_arr, int n = 14) {
         return result;
     }
 
+    const double* hp = high.data(0);
+    const double* lp = low.data(0);
+    const double* cp = close.data(0);
+
     ArrD result(len);
     auto res = result.mutable_unchecked<1>();
     for (py::ssize_t i = 0; i < n; ++i) res(i) = std::numeric_limits<double>::quiet_NaN();
 
-    py::ssize_t tr_len = len - 1;
-    std::vector<double> tr(tr_len);
+    {
+        py::gil_scoped_release release;
 
-    for (py::ssize_t i = 0; i < tr_len; ++i) {
-        double hl = high(i + 1) - low(i + 1);
-        double hc = std::abs(high(i + 1) - close(i));
-        double lc = std::abs(low(i + 1) - close(i));
-        tr[i] = std::max({hl, hc, lc});
-    }
+        py::ssize_t tr_len = len - 1;
+        std::vector<double> tr(tr_len);
 
-    double init_sum = 0.0;
-    for (int i = 0; i < n; ++i) init_sum += tr[i];
-    res(n) = init_sum / n;
+        for (py::ssize_t i = 0; i < tr_len; ++i) {
+            double hl = hp[i + 1] - lp[i + 1];
+            double hc = std::abs(hp[i + 1] - cp[i]);
+            double lc = std::abs(lp[i + 1] - cp[i]);
+            tr[i] = std::max({hl, hc, lc});
+        }
 
-    for (py::ssize_t i = n + 1; i < len; ++i) {
-        res(i) = (res(i - 1) * (n - 1) + tr[i - 1]) / n;
+        double init_sum = 0.0;
+        for (int i = 0; i < n; ++i) init_sum += tr[i];
+        res(n) = init_sum / n;
+
+        for (py::ssize_t i = n + 1; i < len; ++i) {
+            res(i) = (res(i - 1) * (n - 1) + tr[i - 1]) / n;
+        }
     }
     return result;
 }
@@ -347,36 +395,78 @@ double cosine_similarity_vec(const std::vector<double>& x, const std::vector<dou
     return dot / (norm_x * norm_y);
 }
 
-// 向量版 DTW 距离（用于批量内部精排）
-double dtw_distance_vec(const std::vector<double>& x, const std::vector<double>& y, int window = 5) {
-    py::ssize_t n = static_cast<py::ssize_t>(x.size());
-    py::ssize_t m = static_cast<py::ssize_t>(y.size());
+// 向量版 DTW（兼容旧调用，委托给 span 版）
+inline double dtw_distance_vec(const std::vector<double>& x, const std::vector<double>& y, int window = 5) {
+    return dtw_distance_span(x.data(), static_cast<py::ssize_t>(x.size()),
+                              y.data(), static_cast<py::ssize_t>(y.size()), window);
+}
 
-    if (n == 0 || m == 0) return std::numeric_limits<double>::infinity();
+// 批量 DTW: 一个 query 对 N 个 candidates（一对一远端循环，GIL 释放）
+py::object dtw_distance_batch(
+    ArrD query_arr,
+    ArrD candidates_arr,
+    int window = 5,
+    int top_k = 0
+) {
+    auto q = query_arr.unchecked<1>();
+    auto c = candidates_arr.unchecked<2>();
+    py::ssize_t L = q.shape(0);
+    py::ssize_t N = c.shape(0);
 
-    int band = std::max(window, static_cast<int>(std::abs(n - m)));
+    if (N == 0) {
+        if (top_k > 0) {
+            ArrI64 empty_idx(0);
+            ArrD empty_dist(0);
+            return py::make_tuple(empty_idx, empty_dist);
+        }
+        ArrD empty_result(0);
+        return empty_result;
+    }
 
-    std::vector<double> dtw_data((n + 1) * (m + 1), std::numeric_limits<double>::infinity());
-    auto dtw = [&](py::ssize_t i, py::ssize_t j) -> double& {
-        return dtw_data[i * (m + 1) + j];
-    };
+    if (c.shape(1) != L) {
+        throw std::invalid_argument(
+            "candidates.shape[1] must equal query length, got " +
+            std::to_string(c.shape(1)) + " vs " + std::to_string(L));
+    }
 
-    dtw(0, 0) = 0.0;
+    std::vector<double> distances(N);
 
-    for (py::ssize_t i = 1; i <= n; ++i) {
-        py::ssize_t j_start = std::max(py::ssize_t(1), i - band);
-        py::ssize_t j_end = std::min(m + 1, i + band + 1);
-        for (py::ssize_t j = j_start; j < j_end; ++j) {
-            double cost = x[i - 1] - y[j - 1];
-            cost *= cost;
-            double prev = std::min({dtw(i - 1, j), dtw(i, j - 1), dtw(i - 1, j - 1)});
-            dtw(i, j) = cost + prev;
+    {
+        py::gil_scoped_release release;
+        const double* q_ptr = q.data(0);
+        for (py::ssize_t i = 0; i < N; ++i) {
+            distances[i] = dtw_distance_span(q_ptr, L, c.data(i, 0), L, window);
         }
     }
 
-    double path_len = static_cast<double>(n + m);
-    return (path_len > 0) ? std::sqrt(dtw(n, m)) / path_len
-                          : std::numeric_limits<double>::infinity();
+    if (top_k <= 0 || top_k >= static_cast<int>(N)) {
+        ArrD result(N);
+        auto res_buf = result.mutable_unchecked<1>();
+        for (py::ssize_t i = 0; i < N; ++i) res_buf(i) = distances[i];
+        return result;
+    }
+
+    // Top-K via partial_sort
+    std::vector<std::pair<double, py::ssize_t>> indexed;
+    indexed.reserve(N);
+    for (py::ssize_t i = 0; i < N; ++i) {
+        indexed.emplace_back(distances[i], i);
+    }
+    std::partial_sort(
+        indexed.begin(),
+        indexed.begin() + top_k,
+        indexed.end());
+
+    ArrI64 top_indices(top_k);
+    ArrD top_dists(top_k);
+    auto idx_buf = top_indices.mutable_unchecked<1>();
+    auto dist_buf = top_dists.mutable_unchecked<1>();
+    for (int i = 0; i < top_k; ++i) {
+        idx_buf(i) = static_cast<int64_t>(indexed[i].second);
+        dist_buf(i) = indexed[i].first;
+    }
+
+    return py::make_tuple(top_indices, top_dists);
 }
 
 // 从 Top-K 有效匹配中提取 15 维特征
@@ -454,7 +544,173 @@ PatternResult compute_pattern_features_cpp(
     return r;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 共享核心：余弦预筛选 → DTW 精排 → 特征提取
+// single 和 batch 共用此函数，消除 ~400 行重复逻辑
+// ═══════════════════════════════════════════════════════════════
+std::optional<PatternResult> pattern_match_core(
+    const double* prices, py::ssize_t n_prices,
+    int T_idx, int k, int L_query, int T_back,
+    int match_step, int M_forward, int dtw_window,
+    int cos_prefilter_top,
+    const std::vector<double>& query_rets,
+    py::ssize_t search_start, py::ssize_t search_end,
+    const std::vector<std::vector<double>>* precomputed_rets
+) {
+    py::ssize_t n_query = static_cast<py::ssize_t>(query_rets.size());
+
+    // ═══ 第1遍：余弦相似度 + 快速形状距离（全量候选）═══
+    std::vector<MatchCandidate> cos_candidates;
+    std::vector<double> fast_shape_dists;
+
+    for (py::ssize_t hist_end = search_start; hist_end <= search_end; hist_end += match_step) {
+        py::ssize_t hist_start = hist_end - L_query + 1;
+        if (hist_start < 0) continue;
+
+        // 获取标准化收益率：缓存优先，否则现场计算
+        const std::vector<double>* hist_rets_ptr = nullptr;
+        std::vector<double> hist_rets_scratch;
+
+        if (precomputed_rets && hist_end < static_cast<py::ssize_t>(precomputed_rets->size())) {
+            hist_rets_ptr = &(*precomputed_rets)[hist_end];
+        } else {
+            auto hist_prices_vec = extract_window(prices, hist_start, hist_end);
+            if (static_cast<py::ssize_t>(hist_prices_vec.size()) >= L_query) {
+                hist_rets_scratch = standardize_returns_cpp(hist_prices_vec.data(), L_query);
+                hist_rets_ptr = &hist_rets_scratch;
+            }
+        }
+
+        if (!hist_rets_ptr || hist_rets_ptr->size() < 2) continue;
+
+        const auto& hist_rets = *hist_rets_ptr;
+
+        // 余弦相似度
+        double dot = 0.0, nx2 = 0.0, ny2 = 0.0;
+        py::ssize_t min_len = std::min(static_cast<py::ssize_t>(hist_rets.size()), n_query);
+        for (py::ssize_t i = 0; i < min_len; ++i) {
+            dot += hist_rets[i] * query_rets[i];
+            nx2 += hist_rets[i] * hist_rets[i];
+            ny2 += query_rets[i] * query_rets[i];
+        }
+        double nx = std::sqrt(nx2), ny = std::sqrt(ny2);
+        double cos_s = (nx > 1e-12 && ny > 1e-12) ? dot / (nx * ny) : 0.0;
+
+        // 快速形状距离
+        double fast_d2 = 0.0;
+        for (py::ssize_t i = 0; i < min_len; ++i) {
+            double diff = hist_rets[i] - query_rets[i];
+            fast_d2 += diff * diff;
+        }
+        fast_shape_dists.push_back(std::sqrt(fast_d2 / min_len));
+
+        if (cos_s > 0) {
+            cos_candidates.push_back({hist_end, hist_start, cos_s, hist_rets});
+        }
+    }
+
+    if (cos_candidates.size() < 3) return std::nullopt;
+
+    // sigma_fast = std(RMSD) / (2*sqrt(L_query-1))
+    double sigma_fast = 1.0;
+    if (fast_shape_dists.size() > 1) {
+        double mean_fd = std::accumulate(fast_shape_dists.begin(), fast_shape_dists.end(), 0.0)
+                        / fast_shape_dists.size();
+        double var_fd = 0.0;
+        for (auto d : fast_shape_dists) var_fd += (d - mean_fd) * (d - mean_fd);
+        var_fd /= fast_shape_dists.size();
+        sigma_fast = std::sqrt(var_fd) / (2.0 * std::sqrt(static_cast<double>(L_query - 1)));
+    }
+    sigma_fast = std::max(sigma_fast, 1e-12);
+
+    // 余弦排序 + 全量边界
+    std::sort(cos_candidates.begin(), cos_candidates.end(),
+              [](const MatchCandidate& a, const MatchCandidate& b) { return a.cos_s > b.cos_s; });
+
+    double global_min_cos = cos_candidates.back().cos_s;
+    double global_max_cos = cos_candidates.front().cos_s;
+
+    int n_cos = std::min(cos_prefilter_top, static_cast<int>(cos_candidates.size()));
+    cos_candidates.resize(n_cos);
+
+    // ═══ 第2遍：DTW 精排 (仅 top-N) ═══
+    std::vector<double> dtw_dists, cos_sims, future_rets;
+    std::vector<py::ssize_t> match_ends;
+    dtw_dists.reserve(n_cos);
+    cos_sims.reserve(n_cos);
+    future_rets.reserve(n_cos);
+    match_ends.reserve(n_cos);
+
+    for (const auto& cand : cos_candidates) {
+        py::ssize_t hn = static_cast<py::ssize_t>(cand.hist_rets.size());
+        double dtw_d = dtw_distance_span(cand.hist_rets.data(), hn,
+                                          query_rets.data(), n_query, dtw_window);
+
+        dtw_dists.push_back(dtw_d);
+        cos_sims.push_back(cand.cos_s);
+
+        py::ssize_t fut_end = cand.hist_end + M_forward;
+        if (fut_end < n_prices && fut_end < T_idx) {
+            future_rets.push_back(prices[fut_end] / prices[cand.hist_end] - 1.0);
+        } else {
+            future_rets.push_back(std::numeric_limits<double>::quiet_NaN());
+        }
+        match_ends.push_back(cand.hist_end);
+    }
+
+    if (dtw_dists.size() < 3) return std::nullopt;
+
+    // sim_dtw = exp(-dtw/sigma)
+    double sigma = (sigma_fast > 1e-12) ? sigma_fast : 1.0;
+
+    std::vector<double> sim_dtw(dtw_dists.size());
+    double min_dtw_v = std::numeric_limits<double>::max();
+    double max_dtw_v = std::numeric_limits<double>::lowest();
+    for (size_t i = 0; i < dtw_dists.size(); ++i) {
+        sim_dtw[i] = std::exp(-dtw_dists[i] / sigma);
+        min_dtw_v = std::min(min_dtw_v, sim_dtw[i]);
+        max_dtw_v = std::max(max_dtw_v, sim_dtw[i]);
+    }
+
+    // 综合得分: 0.5*norm_dtw + 0.5*norm_cos
+    double range_dtw = (max_dtw_v - min_dtw_v > 1e-12) ? (max_dtw_v - min_dtw_v) : 1.0;
+    double range_cos_val = (global_max_cos - global_min_cos > 1e-12)
+                           ? (global_max_cos - global_min_cos) : 1.0;
+
+    struct Scored { double score, fut_ret; py::ssize_t end_idx; };
+    std::vector<Scored> scored;
+    scored.reserve(sim_dtw.size());
+    for (size_t i = 0; i < sim_dtw.size(); ++i) {
+        double nd = (sim_dtw[i] - min_dtw_v) / range_dtw;
+        double nc = (cos_sims[i] - global_min_cos) / range_cos_val;
+        scored.push_back({0.5 * nd + 0.5 * nc, future_rets[i], match_ends[i]});
+    }
+
+    std::sort(scored.begin(), scored.end(),
+              [](const Scored& a, const Scored& b) { return a.score > b.score; });
+
+    int top_k = std::min(k, static_cast<int>(scored.size()));
+
+    // 过滤 NaN 未来收益
+    std::vector<double> valid_scores, valid_frets;
+    std::vector<py::ssize_t> valid_ends;
+    for (int i = 0; i < top_k; ++i) {
+        if (!std::isnan(scored[i].fut_ret)) {
+            valid_scores.push_back(scored[i].score);
+            valid_frets.push_back(scored[i].fut_ret);
+            valid_ends.push_back(scored[i].end_idx);
+        }
+    }
+    if (valid_scores.size() < 2) return std::nullopt;
+
+    return compute_pattern_features_cpp(valid_scores, valid_frets, valid_ends, T_back);
+}
+
 } // namespace
+
+// ═══════════════════════════════════════════════════════════════
+// 第六部分-A: 单点形态匹配（薄包装 → pattern_match_core）
+// ═══════════════════════════════════════════════════════════════
 py::object pattern_match_single(
     ArrD prices_arr,
     int T_idx,
@@ -471,14 +727,42 @@ py::object pattern_match_single(
     const double* prices = prices_buf.data(0);
 
     // ── 输入校验 ──
+    if (T_idx < 0 || static_cast<py::ssize_t>(T_idx) >= n_prices) {
+        throw std::out_of_range("T_idx must satisfy 0 <= T_idx < len(prices), got " + std::to_string(T_idx));
+    }
+    if (L_query < 3) {
+        throw std::invalid_argument("L_query must be >= 3, got " + std::to_string(L_query));
+    }
+    if (T_back <= 0) {
+        throw std::invalid_argument("T_back must be > 0, got " + std::to_string(T_back));
+    }
+    if (k <= 0) {
+        throw std::invalid_argument("k must be > 0, got " + std::to_string(k));
+    }
+    if (M_forward < 1) {
+        throw std::invalid_argument("M_forward must be >= 1, got " + std::to_string(M_forward));
+    }
+    if (match_step <= 0) {
+        throw std::invalid_argument("match_step must be > 0");
+    }
+    if (dtw_window < 0) {
+        throw std::invalid_argument("dtw_window must be >= 0, got " + std::to_string(dtw_window));
+    }
+    if (cos_prefilter_top <= 0) {
+        throw std::invalid_argument("cos_prefilter_top must be > 0, got " + std::to_string(cos_prefilter_top));
+    }
     if (T_idx < L_query + M_forward + 10) return py::none();
     if (T_idx - L_query + 1 < 0) return py::none();
 
-    // 查询窗口
+    // 查询窗口标准化
     auto query_prices_vec = extract_window(prices, T_idx - L_query + 1, T_idx);
     if (static_cast<py::ssize_t>(query_prices_vec.size()) < L_query) return py::none();
 
-    auto query_rets = standardize_returns_cpp(query_prices_vec.data(), L_query);
+    std::vector<double> query_rets;
+    {
+        py::gil_scoped_release release;
+        query_rets = standardize_returns_cpp(query_prices_vec.data(), L_query);
+    }
     if (query_rets.size() < 2) return py::none();
 
     py::ssize_t search_end = T_idx - L_query;
@@ -486,190 +770,17 @@ py::object pattern_match_single(
     py::ssize_t search_start = std::max(py::ssize_t(L_query - 1),
                                         py::ssize_t(T_idx - T_back));
 
-    if (match_step <= 0) {
-        throw std::invalid_argument("match_step must be > 0");
-    }
-
+    // ── 委托共享核心（无预计算缓存，现场标准化）──
     std::optional<PatternResult> result_opt;
-
-    // ── GIL 释放区：查询窗口标准化、余弦预筛选、DTW 精排、特征提取 ──
     {
         py::gil_scoped_release release;
-
-        result_opt = [&]() -> std::optional<PatternResult> {
-            // ═══════════════════════════════════════════════════════
-            // 第1遍：余弦相似度 + 快速形状距离（全量候选）
-            // ═══════════════════════════════════════════════════════
-            std::vector<MatchCandidate> cos_candidates;
-            std::vector<double> fast_shape_dists;
-            py::ssize_t n_query = static_cast<py::ssize_t>(query_rets.size());
-
-            for (py::ssize_t hist_end = search_start; hist_end <= search_end; hist_end += match_step) {
-                py::ssize_t hist_start = hist_end - L_query + 1;
-                if (hist_start < 0) continue;
-
-                auto hist_prices_vec = extract_window(prices, hist_start, hist_end);
-                if (static_cast<py::ssize_t>(hist_prices_vec.size()) < L_query) continue;
-
-                auto hist_rets = standardize_returns_cpp(hist_prices_vec.data(), L_query);
-                if (hist_rets.size() < 2) continue;
-
-                // 余弦相似度 (用 hist_rets 和 query_rets)
-                double dot = 0.0, nx2 = 0.0, ny2 = 0.0;
-                py::ssize_t rlen = static_cast<py::ssize_t>(hist_rets.size());
-                py::ssize_t qlen = n_query;
-                py::ssize_t min_len = std::min(rlen, qlen);
-                for (py::ssize_t i = 0; i < min_len; ++i) {
-                    dot += hist_rets[i] * query_rets[i];
-                    nx2 += hist_rets[i] * hist_rets[i];
-                    ny2 += query_rets[i] * query_rets[i];
-                }
-                double nx = std::sqrt(nx2), ny = std::sqrt(ny2);
-                double cos_s = (nx > 1e-12 && ny > 1e-12) ? dot / (nx * ny) : 0.0;
-
-                // 快速形状距离
-                double fast_d2 = 0.0;
-                for (py::ssize_t i = 0; i < min_len; ++i) {
-                    double diff = hist_rets[i] - query_rets[i];
-                    fast_d2 += diff * diff;
-                }
-                fast_shape_dists.push_back(std::sqrt(fast_d2 / min_len));
-
-                if (cos_s > 0) {
-                    cos_candidates.push_back({hist_end, hist_start, cos_s, std::move(hist_rets)});
-                }
-            }
-
-            if (cos_candidates.size() < 3) return std::nullopt;
-
-            // sigma_fast = std(RMSD) / (2*sqrt(L_query-1))
-            double sigma_fast = 1.0;
-            if (fast_shape_dists.size() > 1) {
-                double mean_fd = std::accumulate(fast_shape_dists.begin(), fast_shape_dists.end(), 0.0)
-                                / fast_shape_dists.size();
-                double var_fd = 0.0;
-                for (auto d : fast_shape_dists) var_fd += (d - mean_fd) * (d - mean_fd);
-                var_fd /= fast_shape_dists.size();
-                sigma_fast = std::sqrt(var_fd) / (2.0 * std::sqrt(static_cast<double>(L_query - 1)));
-            }
-            sigma_fast = std::max(sigma_fast, 1e-12);
-
-            // 余弦排序 + 全量边界
-            std::sort(cos_candidates.begin(), cos_candidates.end(),
-                      [](const MatchCandidate& a, const MatchCandidate& b) {
-                          return a.cos_s > b.cos_s;
-                      });
-
-            double global_min_cos = cos_candidates.back().cos_s;
-            double global_max_cos = cos_candidates.front().cos_s;
-
-            int n_cos = std::min(cos_prefilter_top, static_cast<int>(cos_candidates.size()));
-            cos_candidates.resize(n_cos);
-
-            // ═══════════════════════════════════════════════════════
-            // 第2遍：DTW 精排 (仅 top-N)
-            // ═══════════════════════════════════════════════════════
-            std::vector<double> dtw_dists, cos_sims, future_rets;
-            std::vector<py::ssize_t> match_ends;
-            dtw_dists.reserve(n_cos);
-            cos_sims.reserve(n_cos);
-            future_rets.reserve(n_cos);
-            match_ends.reserve(n_cos);
-
-            for (const auto& cand : cos_candidates) {
-                // DTW
-                py::ssize_t hn = static_cast<py::ssize_t>(cand.hist_rets.size());
-                int band = std::max(dtw_window, static_cast<int>(std::abs(hn - n_query)));
-
-                // 局部 DTW 矩阵
-                std::vector<double> dtw_data((hn + 1) * (n_query + 1),
-                                             std::numeric_limits<double>::infinity());
-                auto dtw_at = [&](py::ssize_t i, py::ssize_t j) -> double& {
-                    return dtw_data[i * (n_query + 1) + j];
-                };
-                dtw_at(0, 0) = 0.0;
-
-                for (py::ssize_t i = 1; i <= hn; ++i) {
-                    py::ssize_t js = std::max(py::ssize_t(1), i - band);
-                    py::ssize_t je = std::min(n_query + 1, i + band + 1);
-                    for (py::ssize_t j = js; j < je; ++j) {
-                        double cost = cand.hist_rets[i - 1] - query_rets[j - 1];
-                        cost *= cost;
-                        double prev = std::min({dtw_at(i - 1, j), dtw_at(i, j - 1), dtw_at(i - 1, j - 1)});
-                        dtw_at(i, j) = cost + prev;
-                    }
-                }
-
-                double path_len = static_cast<double>(hn + n_query);
-                double dtw_d = (path_len > 0) ? std::sqrt(dtw_at(hn, n_query)) / path_len
-                                              : std::numeric_limits<double>::infinity();
-
-                dtw_dists.push_back(dtw_d);
-                cos_sims.push_back(cand.cos_s);
-
-                // 未来收益
-                py::ssize_t fut_end = cand.hist_end + M_forward;
-                if (fut_end < n_prices && fut_end < T_idx) {
-                    future_rets.push_back(prices[fut_end] / prices[cand.hist_end] - 1.0);
-                } else {
-                    future_rets.push_back(std::numeric_limits<double>::quiet_NaN());
-                }
-                match_ends.push_back(cand.hist_end);
-            }
-
-            if (dtw_dists.size() < 3) return std::nullopt;
-
-            // sigma (V3.0-FIX-2: 使用 sigma_fast)
-            double sigma = (sigma_fast > 1e-12) ? sigma_fast : 1.0;
-
-            // sim_dtw = exp(-dtw/sigma)
-            std::vector<double> sim_dtw(dtw_dists.size());
-            double min_dtw = std::numeric_limits<double>::max();
-            double max_dtw = std::numeric_limits<double>::lowest();
-            for (size_t i = 0; i < dtw_dists.size(); ++i) {
-                sim_dtw[i] = std::exp(-dtw_dists[i] / sigma);
-                min_dtw = std::min(min_dtw, sim_dtw[i]);
-                max_dtw = std::max(max_dtw, sim_dtw[i]);
-            }
-
-            // 综合得分: 0.5*norm_dtw + 0.5*norm_cos
-            double range_dtw = (max_dtw - min_dtw > 1e-12) ? (max_dtw - min_dtw) : 1.0;
-            double range_cos = (global_max_cos - global_min_cos > 1e-12)
-                               ? (global_max_cos - global_min_cos) : 1.0;
-
-            struct Scored {
-                double score, fut_ret;
-                py::ssize_t end_idx;
-            };
-            std::vector<Scored> scored;
-            scored.reserve(sim_dtw.size());
-            for (size_t i = 0; i < sim_dtw.size(); ++i) {
-                double nd = (sim_dtw[i] - min_dtw) / range_dtw;
-                double nc = (cos_sims[i] - global_min_cos) / range_cos;
-                scored.push_back({0.5 * nd + 0.5 * nc, future_rets[i], match_ends[i]});
-            }
-
-            std::sort(scored.begin(), scored.end(),
-                      [](const Scored& a, const Scored& b) { return a.score > b.score; });
-
-            int top_k = std::min(k, static_cast<int>(scored.size()));
-
-            // 过滤 NaN 未来收益（V3.3 原逻辑: 过滤后至少2个有效）
-            std::vector<double> valid_scores, valid_frets;
-            std::vector<py::ssize_t> valid_ends;
-            for (int i = 0; i < top_k; ++i) {
-                if (!std::isnan(scored[i].fut_ret)) {
-                    valid_scores.push_back(scored[i].score);
-                    valid_frets.push_back(scored[i].fut_ret);
-                    valid_ends.push_back(scored[i].end_idx);
-                }
-            }
-            if (valid_scores.size() < 2) return std::nullopt;
-
-            // ── 提取 15 维特征 ──
-            return compute_pattern_features_cpp(valid_scores, valid_frets, valid_ends, T_back);
-        }();
-    } // GIL 在此重获
+        result_opt = pattern_match_core(
+            prices, n_prices, T_idx, k, L_query, T_back,
+            match_step, M_forward, dtw_window, cos_prefilter_top,
+            query_rets, search_start, search_end,
+            nullptr  // 无预计算缓存
+        );
+    }
 
     if (!result_opt.has_value()) return py::none();
 
@@ -717,6 +828,27 @@ py::tuple pattern_match_batch(
     const int64_t* t_ptr = t_buf.data(0);
 
     // ── 输入校验 ──
+    if (L_query < 3) {
+        throw std::invalid_argument("L_query must be >= 3, got " + std::to_string(L_query));
+    }
+    if (T_back <= 0) {
+        throw std::invalid_argument("T_back must be > 0, got " + std::to_string(T_back));
+    }
+    if (k <= 0) {
+        throw std::invalid_argument("k must be > 0, got " + std::to_string(k));
+    }
+    if (M_forward < 1) {
+        throw std::invalid_argument("M_forward must be >= 1, got " + std::to_string(M_forward));
+    }
+    if (match_step <= 0) {
+        throw std::invalid_argument("match_step must be > 0");
+    }
+    if (dtw_window < 0) {
+        throw std::invalid_argument("dtw_window must be >= 0, got " + std::to_string(dtw_window));
+    }
+    if (cos_prefilter_top <= 0) {
+        throw std::invalid_argument("cos_prefilter_top must be > 0, got " + std::to_string(cos_prefilter_top));
+    }
     if (n_samples == 0) {
         ArrD empty_features(std::vector<py::ssize_t>{0, 15});
         py::array_t<bool> empty_mask(std::vector<py::ssize_t>{0});
@@ -732,10 +864,6 @@ py::tuple pattern_match_batch(
         throw std::invalid_argument("max(t_indices) must be < len(prices)");
     }
 
-    if (match_step <= 0) {
-        throw std::invalid_argument("match_step must be > 0");
-    }
-
     std::vector<double> features_flat;
     features_flat.reserve(n_samples * 15);
     std::vector<bool> valid_mask(n_samples, false);
@@ -744,14 +872,31 @@ py::tuple pattern_match_batch(
         // ── GIL 释放区：纯 C++ 批量计算 ──
         py::gil_scoped_release release;
 
-        // ── 预计算所有合法窗口的标准化收益率 ──
-        // 窗口结束索引 end ∈ [L_query - 1, n_prices - 1]
+        // ── 第一遍：计算所有 T_idx 搜索范围的并集（避免预计算无用窗口）──
+        py::ssize_t precompute_start = n_prices;
+        py::ssize_t precompute_end = 0;
+        for (py::ssize_t s = 0; s < n_samples; ++s) {
+            int T_idx = static_cast<int>(t_ptr[s]);
+            if (T_idx < L_query + M_forward + 10) continue;
+            py::ssize_t s_end = T_idx - L_query;
+            if (s_end < L_query) continue;
+            py::ssize_t s_start = std::max(py::ssize_t(L_query - 1),
+                                           py::ssize_t(T_idx - T_back));
+            if (s_start < s_end) {
+                precompute_start = std::min(precompute_start, s_start);
+                precompute_end = std::max(precompute_end, s_end);
+            }
+        }
+
+        // ── 仅预计算搜索范围并集内的窗口标准化收益率 ──
         std::vector<std::vector<double>> precomputed_rets(n_prices);
-        for (py::ssize_t end = L_query - 1; end < n_prices; ++end) {
-            py::ssize_t start = end - L_query + 1;
-            if (start >= 0) {
-                auto window_prices = extract_window(prices, start, end);
-                precomputed_rets[end] = standardize_returns_cpp(window_prices.data(), L_query);
+        if (precompute_start <= precompute_end) {
+            for (py::ssize_t end = precompute_start; end <= precompute_end; ++end) {
+                py::ssize_t start = end - L_query + 1;
+                if (start >= 0) {
+                    auto window_prices = extract_window(prices, start, end);
+                    precomputed_rets[end] = standardize_returns_cpp(window_prices.data(), L_query);
+                }
             }
         }
 
@@ -773,143 +918,17 @@ py::tuple pattern_match_batch(
             py::ssize_t search_start = std::max(py::ssize_t(L_query - 1),
                                                 py::ssize_t(T_idx - T_back));
 
-            py::ssize_t n_query = static_cast<py::ssize_t>(query_rets.size());
+            // ── 委托共享核心（使用预计算缓存）──
+            auto result_opt = pattern_match_core(
+                prices, n_prices, T_idx, k, L_query, T_back,
+                match_step, M_forward, dtw_window, cos_prefilter_top,
+                query_rets, search_start, search_end,
+                &precomputed_rets
+            );
 
-            // 第1遍：余弦相似度 + 快速形状距离（全量候选）
-            std::vector<MatchCandidate> cos_candidates;
-            std::vector<double> fast_shape_dists;
+            if (!result_opt.has_value()) continue;
 
-            for (py::ssize_t hist_end = search_start; hist_end <= search_end; hist_end += match_step) {
-                py::ssize_t hist_start = hist_end - L_query + 1;
-                if (hist_start < 0) continue;
-
-                const auto& hist_rets = precomputed_rets[hist_end];
-                if (hist_rets.size() < 2) continue;
-
-                double dot = 0.0, nx2 = 0.0, ny2 = 0.0;
-                py::ssize_t rlen = static_cast<py::ssize_t>(hist_rets.size());
-                py::ssize_t min_len = std::min(rlen, n_query);
-                for (py::ssize_t i = 0; i < min_len; ++i) {
-                    dot += hist_rets[i] * query_rets[i];
-                    nx2 += hist_rets[i] * hist_rets[i];
-                    ny2 += query_rets[i] * query_rets[i];
-                }
-                double nx = std::sqrt(nx2), ny = std::sqrt(ny2);
-                double cos_s = (nx > 1e-12 && ny > 1e-12) ? dot / (nx * ny) : 0.0;
-
-                double fast_d2 = 0.0;
-                for (py::ssize_t i = 0; i < min_len; ++i) {
-                    double diff = hist_rets[i] - query_rets[i];
-                    fast_d2 += diff * diff;
-                }
-                fast_shape_dists.push_back(std::sqrt(fast_d2 / min_len));
-
-                if (cos_s > 0) {
-                    cos_candidates.push_back({hist_end, hist_start, cos_s, hist_rets});
-                }
-            }
-
-            if (cos_candidates.size() < 3) continue;
-
-            // sigma_fast = std(RMSD) / (2*sqrt(L_query-1))
-            double sigma_fast = 1.0;
-            if (fast_shape_dists.size() > 1) {
-                double mean_fd = std::accumulate(fast_shape_dists.begin(), fast_shape_dists.end(), 0.0)
-                                / fast_shape_dists.size();
-                double var_fd = 0.0;
-                for (auto d : fast_shape_dists) var_fd += (d - mean_fd) * (d - mean_fd);
-                var_fd /= fast_shape_dists.size();
-                sigma_fast = std::sqrt(var_fd) / (2.0 * std::sqrt(static_cast<double>(L_query - 1)));
-            }
-            sigma_fast = std::max(sigma_fast, 1e-12);
-
-            // 余弦排序 + 全量边界
-            std::sort(cos_candidates.begin(), cos_candidates.end(),
-                      [](const MatchCandidate& a, const MatchCandidate& b) {
-                          return a.cos_s > b.cos_s;
-                      });
-
-            double global_min_cos = cos_candidates.back().cos_s;
-            double global_max_cos = cos_candidates.front().cos_s;
-
-            int n_cos = std::min(cos_prefilter_top, static_cast<int>(cos_candidates.size()));
-            cos_candidates.resize(n_cos);
-
-            // 第2遍：DTW 精排 (仅 top-N)
-            std::vector<double> dtw_dists, cos_sims, future_rets;
-            std::vector<py::ssize_t> match_ends;
-            dtw_dists.reserve(n_cos);
-            cos_sims.reserve(n_cos);
-            future_rets.reserve(n_cos);
-            match_ends.reserve(n_cos);
-
-            for (const auto& cand : cos_candidates) {
-                double dtw_d = dtw_distance_vec(cand.hist_rets, query_rets, dtw_window);
-
-                dtw_dists.push_back(dtw_d);
-                cos_sims.push_back(cand.cos_s);
-
-                py::ssize_t fut_end = cand.hist_end + M_forward;
-                if (fut_end < n_prices && fut_end < T_idx) {
-                    future_rets.push_back(prices[fut_end] / prices[cand.hist_end] - 1.0);
-                } else {
-                    future_rets.push_back(std::numeric_limits<double>::quiet_NaN());
-                }
-                match_ends.push_back(cand.hist_end);
-            }
-
-            if (dtw_dists.size() < 3) continue;
-
-            // sigma (V3.0-FIX-2: 使用 sigma_fast)
-            double sigma = (sigma_fast > 1e-12) ? sigma_fast : 1.0;
-
-            // sim_dtw = exp(-dtw/sigma)
-            std::vector<double> sim_dtw(dtw_dists.size());
-            double min_dtw = std::numeric_limits<double>::max();
-            double max_dtw = std::numeric_limits<double>::lowest();
-            for (size_t i = 0; i < dtw_dists.size(); ++i) {
-                sim_dtw[i] = std::exp(-dtw_dists[i] / sigma);
-                min_dtw = std::min(min_dtw, sim_dtw[i]);
-                max_dtw = std::max(max_dtw, sim_dtw[i]);
-            }
-
-            // 综合得分: 0.5*norm_dtw + 0.5*norm_cos
-            double range_dtw = (max_dtw - min_dtw > 1e-12) ? (max_dtw - min_dtw) : 1.0;
-            double range_cos = (global_max_cos - global_min_cos > 1e-12)
-                               ? (global_max_cos - global_min_cos) : 1.0;
-
-            struct Scored {
-                double score, fut_ret;
-                py::ssize_t end_idx;
-            };
-            std::vector<Scored> scored;
-            scored.reserve(sim_dtw.size());
-            for (size_t i = 0; i < sim_dtw.size(); ++i) {
-                double nd = (sim_dtw[i] - min_dtw) / range_dtw;
-                double nc = (cos_sims[i] - global_min_cos) / range_cos;
-                scored.push_back({0.5 * nd + 0.5 * nc, future_rets[i], match_ends[i]});
-            }
-
-            std::sort(scored.begin(), scored.end(),
-                      [](const Scored& a, const Scored& b) { return a.score > b.score; });
-
-            int top_k = std::min(k, static_cast<int>(scored.size()));
-
-            // 过滤 NaN 未来收益（过滤后至少2个有效）
-            std::vector<double> valid_scores, valid_frets;
-            std::vector<py::ssize_t> valid_ends;
-            for (int i = 0; i < top_k; ++i) {
-                if (!std::isnan(scored[i].fut_ret)) {
-                    valid_scores.push_back(scored[i].score);
-                    valid_frets.push_back(scored[i].fut_ret);
-                    valid_ends.push_back(scored[i].end_idx);
-                }
-            }
-            if (valid_scores.size() < 2) continue;
-
-            // 提取 15 维特征
-            auto r = compute_pattern_features_cpp(valid_scores, valid_frets, valid_ends, T_back);
-
+            auto& r = *result_opt;
             features_flat.push_back(r.top1_sim);
             features_flat.push_back(r.top5_avg_sim);
             features_flat.push_back(r.sim_decay);
@@ -957,7 +976,8 @@ PYBIND11_MODULE(etf_core, m) {
     m.doc() = "ETF pattern matching core — C++ accelerated (pybind11)\n\n"
               "来源: 形态匹配ETF组合策略_V3.3.py\n"
               "模块: dtw_distance, standardize_returns, cosine_similarity,\n"
-              "       compute_adx, compute_atr, pattern_match_single, pattern_match_batch\n"
+              "       compute_adx, compute_atr, dtw_distance_batch,\n"
+              "       pattern_match_single, pattern_match_batch\n"
               "v2: 三模块合并为单一 etf_core, /utf-8, py::ssize_t, forcecast\n"
               "v3: 新增 pattern_match_batch，支持同 ETF 多 T_idx 批量形态匹配";
 
@@ -979,6 +999,18 @@ PYBIND11_MODULE(etf_core, m) {
           "Sakoe-Chiba band DTW 距离.\n"
           "返回归一化距离: sqrt(dtw[n,m]) / (n+m).\n"
           "空序列返回 inf.");
+
+    m.def("dtw_distance_batch", &dtw_distance_batch,
+          py::arg("query"), py::arg("candidates"),
+          py::arg("window") = 5, py::arg("top_k") = 0,
+          "批量 DTW: 一个 query 对 N 个 candidates.\n\n"
+          "Args:\n"
+          "  query: 1-D float64 array (L,)\n"
+          "  candidates: 2-D float64 array (N, L)\n"
+          "  window: Sakoe-Chiba band 宽度\n"
+          "  top_k: 若 >0 且 <N，返回 (top_indices, top_distances);\n"
+          "         否则返回全部 distances (N,)\n\n"
+          "Returns: distances (N,) 或 (indices, distances) 各 (top_k,)");
 
     // ── 技术指标 ──
     m.def("compute_adx", &compute_adx,

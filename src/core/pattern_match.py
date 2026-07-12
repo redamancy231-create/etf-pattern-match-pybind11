@@ -79,6 +79,12 @@ def pattern_match_single(
     hist_rets缓存, global_min_cos/max_cos.
     """
     # ── 输入校验 ──
+    if M_forward < 1:
+        raise ValueError(f"M_forward must be >= 1, got {M_forward}")
+    if L_query < 3:
+        raise ValueError(f"L_query must be >= 3, got {L_query}")
+    if match_step <= 0:
+        raise ValueError(f"match_step must be > 0, got {match_step}")
     if T_idx < L_query + M_forward + 10:
         return None
 
@@ -242,8 +248,14 @@ def compute_pattern_features(
     Returns:
         15维特征字典
     """
+    if len(top_scores) == 0 or len(top_scores) != len(top_future_rets) or len(top_scores) != len(top_end_indices):
+        raise ValueError("top_scores, top_future_rets, top_end_indices must be non-empty and equal length")
+    if T_back <= 0:
+        raise ValueError(f"T_back must be > 0, got {T_back}")
     if top_k_actual is None:
         top_k_actual = len(top_scores)
+    if top_k_actual < 1 or top_k_actual > len(top_scores):
+        raise ValueError(f"top_k_actual={top_k_actual} must satisfy 1 <= top_k_actual <= {len(top_scores)}")
 
     # F1-F5: 相似度特征
     top1_sim = float(top_scores[0])

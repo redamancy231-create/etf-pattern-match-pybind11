@@ -55,7 +55,8 @@ def compute_rolling_vol_percentile(
     rets = np.diff(np.log(np.maximum(close_prices, 1e-12)))
     rets = rets[~np.isnan(rets)]
 
-    if len(rets) < lookback + window:
+    # 要获得 lookback 个长度为 window 的窗口，只需 lookback + window - 1 个收益
+    if len(rets) < lookback + window - 1:
         return {
             "current_vol": 0.0, "percentile_N": 0.0,
             "threshold": 0.0, "triggered": False,
@@ -99,6 +100,8 @@ def compute_ma_trend_signal(
     Returns:
         (trend_down: bool, current_price: float, ma_value: float)
     """
+    if len(close_prices) == 0:
+        raise ValueError("close_prices must not be empty")
     min_len = ma_period + max(downside_confirm_days, upside_confirm_days)
     if len(close_prices) < min_len:
         return False, float(close_prices[-1]), float(np.mean(close_prices))

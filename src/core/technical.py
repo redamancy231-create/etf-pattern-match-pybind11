@@ -42,7 +42,18 @@ def compute_adx(
 
     算法逻辑: 与 V3.3.py 第 757-795 行完全一致。
     """
-    if len(high) < n + 16 or len(low) < n + 16 or len(close) < n + 16:
+    # 强制转换为 float64，防止整数 dtype 静默截断
+    high = np.asarray(high, dtype=np.float64)
+    low = np.asarray(low, dtype=np.float64)
+    close = np.asarray(close, dtype=np.float64)
+
+    if high.ndim != 1 or low.ndim != 1 or close.ndim != 1:
+        raise ValueError("high/low/close must be 1-D arrays")
+    if len(high) != len(low) or len(high) != len(close):
+        raise ValueError("high/low/close must have same length")
+    if n <= 0:
+        raise ValueError(f"n must be > 0, got {n}")
+    if len(high) < n + 16:
         return 25.0
 
     # True Range
@@ -105,25 +116,18 @@ def compute_sector_rotation(
 
     算法逻辑: 与 V3.3.py 第 801-836, 1003-1032 行完全一致。
     """
-    common = set(prev_returns.keys()) & set(curr_returns.keys())
+    common = sorted(set(prev_returns.keys()) & set(curr_returns.keys()))
     if len(common) < min_sectors:
         return 0.0
 
-    prev_vals = {k: prev_returns[k] for k in common}
-    curr_vals = {k: curr_returns[k] for k in common}
+    # 按确定顺序提取收益率值
+    prev_vals_arr = np.array([prev_returns[k] for k in common], dtype=np.float64)
+    curr_vals_arr = np.array([curr_returns[k] for k in common], dtype=np.float64)
 
-    prev_order = sorted(prev_vals, key=prev_vals.get)
-    curr_order = sorted(curr_vals, key=curr_vals.get)
-
-    prev_rank_map = {s: i for i, s in enumerate(prev_order)}
-    curr_rank_map = {s: i for i, s in enumerate(curr_order)}
-
-    common_set = set(prev_rank_map.keys()) & set(curr_rank_map.keys())
-    if len(common_set) < min_sectors:
-        return 0.0
-
-    prev_rank_vals = [prev_rank_map[s] for s in common_set]
-    curr_rank_vals = [curr_rank_map[s] for s in common_set]
+    # 使用平均秩（处理并列值），避免 PYTHONHASHSEED 导致的不确定排序
+    from scipy.stats import rankdata
+    prev_rank_vals = rankdata(prev_vals_arr, method="average")
+    curr_rank_vals = rankdata(curr_vals_arr, method="average")
 
     rho = np.corrcoef(prev_rank_vals, curr_rank_vals)[0, 1]
     if np.isnan(rho):
@@ -145,9 +149,23 @@ def compute_atr(
         n: 平滑周期
 
     Returns:
-        ATR 序列, shape 与输入相同（前 n-1 天为 NaN）
+        ATR 序列, shape 与输入相同（前 n 个元素为 NaN，首个有效值位于索引 n）
     """
-    # True Range
+    high = np.asarray(high, dtype=np.float64)
+    low = np.asarray(low, dtype=np.float64)
+    close = np.asarray(close, dtype=np.float64)
+
+    if high.ndim != 1 or low.ndim != 1 or close.ndim != 1:
+        raise ValueError("high/low/close must be 1-D arrays")
+    if len(high) != len(low) or len(high) != len(close):
+        raise ValueError("high/low/close must have same length")
+    if n <= 0:
+        raise ValueError(f"n must be > 0, got {n}")
+
+    length = len(high)
+    if length < n + 1:
+        # 对齐 C++：数据不足时返回全 NaN（而非崩溃）
+        return np.full(length, np.nan, dtype=np.float64)
     tr = np.maximum(
         high[1:] - low[1:],
         np.maximum(

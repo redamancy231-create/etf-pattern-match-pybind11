@@ -32,9 +32,15 @@ def compute_market_volatility(close_prices: np.ndarray, window: int = 20) -> flo
 
     算法逻辑: 与 V3.3.py 第 886-892 行一致.
     """
+    close_prices = np.asarray(close_prices, dtype=np.float64)
+    if window <= 0:
+        raise ValueError(f"window must be > 0, got {window}")
     if len(close_prices) < window + 1:
         return 0.0
-    rets = np.diff(np.log(np.maximum(close_prices[-(window + 1):], 1e-12)))
+    prices_slice = close_prices[-(window + 1):]
+    if not np.all(np.isfinite(prices_slice)):
+        return 0.0
+    rets = np.diff(np.log(np.maximum(prices_slice, 1e-12)))
     rets = rets[~np.isnan(rets)]
     if len(rets) < 2:
         return 0.0
@@ -55,11 +61,18 @@ def compute_size_relative_strength(
         window: 收益计算窗口
 
     Returns:
-        相对强度；数据不足时返回 0.0。
+        相对强度；数据不足或含非有限值时返回 0.0。
 
     算法逻辑: 与 V3.3.py 第 894-902 行一致.
     """
+    hs300_close = np.asarray(hs300_close, dtype=np.float64)
+    zz500_close = np.asarray(zz500_close, dtype=np.float64)
+    if window <= 0:
+        raise ValueError(f"window must be > 0, got {window}")
     if len(hs300_close) < window + 1 or len(zz500_close) < window + 1:
+        return 0.0
+    if not (np.isfinite(hs300_close[-(window + 1)]) and np.isfinite(hs300_close[-1])
+            and np.isfinite(zz500_close[-(window + 1)]) and np.isfinite(zz500_close[-1])):
         return 0.0
 
     hs300_ret = float(hs300_close[-1] / hs300_close[-(window + 1)] - 1)
@@ -82,11 +95,20 @@ def compute_volume_anomaly(
         long_window: 长期窗口（默认20日）
 
     Returns:
-        异常比率；数据不足时返回 0.0。
+        异常比率；数据不足或含非有限值时返回 0.0。
 
     算法逻辑: 与 V3.3.py 第 915-918 行一致.
     """
+    amounts = np.asarray(amounts, dtype=np.float64)
+    if short_window <= 0 or long_window <= 0:
+        raise ValueError(f"windows must be > 0, got short={short_window}, long={long_window}")
+    if short_window > long_window:
+        raise ValueError(f"short_window ({short_window}) must be <= long_window ({long_window})")
     if len(amounts) < long_window:
+        return 0.0
+    short_slice = amounts[-short_window:]
+    long_slice = amounts[-long_window:]
+    if not (np.all(np.isfinite(short_slice)) and np.all(np.isfinite(long_slice))):
         return 0.0
     short_avg = float(np.mean(amounts[-short_window:]))
     long_avg = float(np.mean(amounts[-long_window:]))
@@ -108,11 +130,18 @@ def compute_vol_change(
         long_window: 长期窗口（默认20日）
 
     Returns:
-        波动率变化比率；数据不足时返回 0.0。
+        波动率变化比率；数据不足或含非有限值时返回 0.0。
 
     算法逻辑: 与 V3.3.py 第 922-928 行一致.
     """
+    close_prices = np.asarray(close_prices, dtype=np.float64)
+    if short_window <= 0 or long_window <= 0:
+        raise ValueError(f"windows must be > 0, got short={short_window}, long={long_window}")
+    if short_window > long_window:
+        raise ValueError(f"short_window ({short_window}) must be <= long_window ({long_window})")
     if len(close_prices) < long_window + 1:
+        return 0.0
+    if not np.all(np.isfinite(close_prices[-(long_window + 1):])):
         return 0.0
 
     rets = np.diff(np.log(np.maximum(close_prices, 1e-12)))

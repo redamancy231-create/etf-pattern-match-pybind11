@@ -31,18 +31,18 @@ def standardize_returns(price_series: np.ndarray) -> np.ndarray:
         price_series: 价格序列, shape (n,)
 
     Returns:
-        标准化收益率序列, shape (n-1,). 数据不足时返回零数组。
+        标准化收益率序列, shape (n-1,). 若任一价格为非有限值则返回空数组。
 
     算法逻辑: 与 V3.3.py 第 362-373 行完全一致。
     """
     if len(price_series) < 2:
-        return np.zeros(max(0, len(price_series) - 1))
+        return np.array([], dtype=np.float64)
+
+    # 窗口级检查：任一价格为非有限值 → 整个窗口无效
+    if not np.all(np.isfinite(price_series)):
+        return np.array([], dtype=np.float64)
 
     rets = np.diff(np.log(np.maximum(price_series, 1e-12)))
-    rets = rets[~np.isnan(rets)]
-    if len(rets) == 0:
-        return np.zeros(max(0, len(price_series) - 1))
-
     std_ = np.std(rets)
     if std_ < 1e-12:
         return rets - np.mean(rets)
@@ -157,6 +157,16 @@ def generate_query_candidates(
     Returns:
         (query_prices, candidates_prices, candidate_end_indices)
     """
+    if L_query <= 0:
+        raise ValueError(f"L_query must be > 0, got {L_query}")
+    if T_back <= 0:
+        raise ValueError(f"T_back must be > 0, got {T_back}")
+    if match_step <= 0:
+        raise ValueError(f"match_step must be > 0, got {match_step}")
+    if T_idx < 0 or T_idx >= len(prices):
+        raise ValueError(f"T_idx={T_idx} must satisfy 0 <= T_idx < {len(prices)}")
+    if not np.all(np.isfinite(prices)):
+        raise ValueError("prices contains non-finite values")
     if T_idx < L_query:
         raise ValueError(f"T_idx={T_idx} < L_query={L_query}")
 

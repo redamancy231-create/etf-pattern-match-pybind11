@@ -32,7 +32,13 @@ def compute_max_drawdown(cumulative_returns: np.ndarray) -> float:
     Returns:
         最大回撤（负值），如 -0.15 表示 15% 回撤。
     """
+    if len(cumulative_returns) == 0:
+        return 0.0
+    if not np.all(np.isfinite(cumulative_returns)):
+        raise ValueError("cumulative_returns contains non-finite values")
     running_max = np.maximum.accumulate(cumulative_returns)
+    if running_max[-1] <= 1e-12:
+        return -1.0  # 净值归零 → 全部亏损
     drawdown = (cumulative_returns - running_max) / running_max
     return float(np.min(drawdown))
 
@@ -178,10 +184,12 @@ def compute_weekly_win_rate(
     Returns:
         周度胜率 ∈ [0, 1]；数据不足时返回 0.0。
     """
+    if len(daily_returns) != len(dates):
+        raise ValueError(f"len(daily_returns)={len(daily_returns)} != len(dates)={len(dates)}")
     try:
         import pandas as pd
     except ImportError:
-        # Fallback: 简单每5日分组
+        # Fallback: 简单每5日分组（无 pandas 时无法做 ISO 周，降级为固定窗口）
         n_weeks = len(daily_returns) // 5
         if n_weeks == 0:
             return 0.0
