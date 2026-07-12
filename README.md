@@ -62,6 +62,8 @@ Core single-call speedups reach 43x–58x, while batch matching reaches 2.2x bec
 
 ## 快速开始 | Quick Start
 
+**▶️ [Interactive Demo Notebook](notebooks/etf_pattern_matching_demo.ipynb)** — 在 Jupyter 中逐步体验完整算法流程 | walk through the full algorithm step-by-step in Jupyter.
+
 ```bash
 # 编译 C++ 模块 | Compile C++ module
 cmake -B build -DPython_EXECUTABLE="<path-to-python.exe>"
@@ -72,6 +74,9 @@ python verify_etf_core.py
 
 # 运行测试 | Run tests
 python -m pytest tests/ -v
+
+# 启动交互演示 | Launch interactive demo
+jupyter notebook notebooks/etf_pattern_matching_demo.ipynb
 ```
 
 ## 项目结构 | Project Structure
@@ -85,9 +90,12 @@ python -m pytest tests/ -v
 │   ├── risk_controls.py        # Risk control rules (pure computation)
 │   └── metrics.py              # Sortino / Calmar / IC statistics
 ├── src/cpp/
+├── src/cpp/
 │   ├── etf_core.cpp            # Unified C++ acceleration module (7 functions, ~1,000 lines)
 │   └── pyi/etf_core.pyi        # Type stubs
 ├── tests/                      # 54 unit tests
+├── notebooks/
+│   └── etf_pattern_matching_demo.ipynb  # Interactive demo (GPT-5.6-Sol reviewed)
 ├── verify_etf_core.py          # C++ vs Python consistency verification
 ├── verify_batch.py             # Batch pattern matching verification
 └── CLAUDE.md                   # Development notes and pybind11 lessons

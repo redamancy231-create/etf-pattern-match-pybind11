@@ -143,6 +143,8 @@ using ArrI64 = py::array_t<int64_t, py::array::c_style | py::array::forcecast>;
 | | | | Missing pattern_match_batch; dtype/exception contracts; F12-F15 tests; CLAUDE.md specification |
 | R3 | Kimi-K2.7-Code | 代码改进 Code Improvements | 全量 GIL 覆盖 + batch 契约收敛 + CMake 友好错误 + match_step 守卫 + 边界测试（52→54） |
 | | | | Full GIL coverage + batch contract convergence + CMake-friendly errors + match_step guard + boundary tests (52→54) |
+| R4 | GPT-5.6-Sol via Codex | 门面演示审查 Demo Review | Jupyter notebook 四维度审查（性能基准/前视偏差/信号逻辑/表述准确性）→ 22 项发现全部修复闭合；详见 notebooks/etf_pattern_matching_demo.ipynb |
+| | | | Four-dimension Jupyter notebook review (benchmarks/look-ahead bias/signal logic/terminology) → 22 findings all fixed and closed; see notebook |
 
 ## 关联项目 | Related Projects
 
