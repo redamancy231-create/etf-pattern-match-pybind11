@@ -77,9 +77,11 @@ ls build/Release/Release/*.cp312-win_amd64.pyd
 
 | 函数 Function | Python | C++ | 加速比 Speedup |
 |------|--------|-----|--------|
-| DTW (L=19) | 124.8 µs | 2.9 µs | **43.3x** |
-| pattern_match_single | 15.3 ms | 0.3 ms | **58.4x** |
-| pattern_match_batch (100 T_idx) | 50.0 ms | 22.8 ms | **2.2x** |
+| DTW (L=19) | 98 µs | 2.7 µs | **37x** |
+| pattern_match_single | 14.3 ms | 0.23 ms | **61x** |
+| pattern_match_batch (100 T_idx) | 50 ms¹ | 23 ms | **2.2x¹** |
+
+> ¹ C++ single ×100 vs C++ batch ×1 — batch-interface overhead reduction, not Python-vs-C++.
 
 ## pybind11 关键经验 | Key pybind11 Lessons
 
