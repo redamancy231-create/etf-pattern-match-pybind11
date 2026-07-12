@@ -43,6 +43,9 @@ Core single-call speedups reach 43x–58x, while batch matching reaches 2.2x bec
 | 形态匹配（单 ETF 单时间点）Pattern Match (single ETF, one timestamp) | 15.3 ms | 0.3 ms | **58x** |
 | 批量形态匹配（100 时间点）Batch Pattern Match (100 timestamps) | 50 ms | 23 ms | **2.2x** |
 
+> **详细分析**：2.2x 和 58x 之间的差距不是 bug，是 Amdahl's Law。见 [性能分析短文](docs/performance-analysis.md)（中英双语）。
+> **Detailed analysis**: why 58× becomes 2.2× end-to-end, explained via Amdahl's Law. See [performance analysis article](docs/performance-analysis.md) (bilingual).
+
 ### 基准测试范围 | Benchmark Scope
 
 - Platform：Windows 11, MSVC Release `/O2`
