@@ -6,6 +6,7 @@
 [![CMake](https://img.shields.io/badge/CMake-3.20+-064F8C)](https://cmake.org/)
 [![pybind11](https://img.shields.io/badge/pybind11-3.0.4-green)](https://github.com/pybind/pybind11)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Featured](https://img.shields.io/badge/featured-chinese--independent--developer-orange)](https://github.com/1c7/chinese-independent-developer)
 
 ## English | English Summary
 
