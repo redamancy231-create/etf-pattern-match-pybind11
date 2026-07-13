@@ -8,7 +8,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Featured](https://img.shields.io/badge/featured-chinese--independent--developer-orange)](https://github.com/1c7/chinese-independent-developer)
 
-> ⚡ DTW 98µs→2.7µs (37x) | 形态匹配 14.3ms→0.23ms (61x) | pybind11+C++20 | pip install 即用
+> ⚡ DTW 98µs→2.7µs (37x) | 形态匹配 14.3ms→0.23ms (61x) | pybind11+C++20 | cmake build 即用
 
 ## English | English Summary
 
