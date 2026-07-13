@@ -8,6 +8,8 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Featured](https://img.shields.io/badge/featured-chinese--independent--developer-orange)](https://github.com/1c7/chinese-independent-developer)
 
+> ⚡ DTW 98µs→2.7µs (37x) | 形态匹配 14.3ms→0.23ms (61x) | pybind11+C++20 | pip install 即用
+
 ## English | English Summary
 
 Pure computation modules were extracted from a 3,836-line Chinese ETF pattern-matching strategy (V3.3) and accelerated with **pybind11 + C++20**. The algorithm logic is unchanged.
