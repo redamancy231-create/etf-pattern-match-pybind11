@@ -253,7 +253,8 @@ All source files are annotated with model provenance.
 | [**Independent Review Toolkit**](https://github.com/redamancy231-create/independent-review-toolkit) | **Review methodology source** — the four-round Kimi + GPT-5.5 cross-backend review followed this toolkit's SOP |
 | [**Prompt-TDD Methodology**](https://github.com/redamancy231-create/prompt-tdd-methodology) | **Sibling project** — controlled experiment methodology for prompt engineering; this project applies similar methodological rigor to pybind11/C++ hybrid programming |
 | [**M&A Case Study Pipeline**](https://github.com/redamancy231-create/ma-case-study-pipeline) | **Sibling project** — multi-model academic production pipeline; shares emphasis on methodology portability and cross-backend verification |
-| [**DOCX Pipeline**](https://github.com/redamancy231-create/docx-pipeline) | **Sibling project** — Markdown → Chinese DOCX pipeline with dual backend + Mermaid; 3-round GPT-5.6-Sol review closure |
+| [**DOCX Pipeline**](https://github.com/redamancy231-create/docx-pipeline) | **Sibling project** — Markdown → Chinese DOCX pipeline with dual backend + Mermaid |
+| [**Claude Skills**](https://github.com/redamancy231-create/claude-skills) | **Sibling project** — 3 battle-tested Claude Code Skills extracted from real project workflows |
 
 <details>
 <summary>中文</summary>
@@ -264,7 +265,8 @@ All source files are annotated with model provenance.
 | [**Independent Review Toolkit**](https://github.com/redamancy231-create/independent-review-toolkit) | **审查方法来源**——本项目的 Kimi + GPT-5.5 四轮异后端审查使用了该工具包的 SOP |
 | [**Prompt-TDD Methodology**](https://github.com/redamancy231-create/prompt-tdd-methodology) | **同级项目**——将对照实验方法论应用于 prompt 工程；本项目在 pybind11/C++ 混合编程方向上应用了类似的方法学严谨性 |
 | [**M&A Case Study Pipeline**](https://github.com/redamancy231-create/ma-case-study-pipeline) | **同级项目**——多模型学术生产流水线；同样强调方法的可移植性和跨后端验证 |
-| [**DOCX Pipeline**](https://github.com/redamancy231-create/docx-pipeline) | **同级项目**——Markdown → 中文 DOCX 泛化管道，双后端 + Mermaid 渲染；经 3 轮 GPT-5.6-Sol 独立审查闭合 |
+| [**DOCX Pipeline**](https://github.com/redamancy231-create/docx-pipeline) | **同级项目**——Markdown → 中文 DOCX 泛化管道，双后端 + Mermaid 渲染 |
+| [**Claude Skills**](https://github.com/redamancy231-create/claude-skills) | **同级项目**——3 个实战验证的 Claude Code Skill，从真实项目工作流提取 |
 
 </details>
 
