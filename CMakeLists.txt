@@ -55,3 +55,10 @@ endif()
 
 # 子目录 — C++ 模块
 add_subdirectory(src/cpp)
+
+# Install — scikit-build-core 需要这些指令来打包 wheel
+install(TARGETS etf_core DESTINATION src/cpp)
+# Also expose the extension at the top level for ``import etf_core`` after pip install.
+install(TARGETS etf_core DESTINATION .)
+# Match scikit-build-core's wheel package destination (``cpp``) as well.
+install(TARGETS etf_core DESTINATION cpp)

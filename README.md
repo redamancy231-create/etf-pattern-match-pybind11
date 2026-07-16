@@ -72,6 +72,12 @@ Core single-call speedups reach 37x–61x, while batch matching (C++ single ×10
 
 **▶️ [Interactive Demo Notebook](notebooks/etf_pattern_matching_demo.ipynb)** — 在 Jupyter 中逐步体验完整算法流程 | walk through the full algorithm step-by-step in Jupyter.
 
+### pip install (推荐)
+```bash
+pip install git+https://github.com/redamancy231-create/etf-pattern-match-pybind11.git
+```
+
+### 从源码构建 (cmake)
 ```bash
 # 编译 C++ 模块 | Compile C++ module
 cmake -B build -DPython_EXECUTABLE="<path-to-python.exe>"

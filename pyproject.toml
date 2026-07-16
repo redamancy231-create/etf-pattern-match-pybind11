@@ -1,0 +1,26 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=3.0.4", "cmake>=3.20"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "etf-pattern-match-pybind11"
+version = "1.0.0"
+description = "High-performance ETF pattern matching — pybind11/C++20 acceleration (DTW 37x / pattern match 61x)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+keywords = ["etf", "pattern-matching", "dtw", "pybind11", "quant"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: C++",
+]
+
+[project.urls]
+Homepage = "https://github.com/redamancy231-create/etf-pattern-match-pybind11"
+
+[tool.scikit-build]
+cmake.version = ">=3.20"
+wheel.packages = ["src/cpp"]
