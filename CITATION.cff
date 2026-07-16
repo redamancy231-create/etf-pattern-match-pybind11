@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+title: "ETF Pattern Matching Strategy — Python+C++ Hybrid Refactor with pybind11"
+authors:
+  - given-names: Acerolaorion
+type: software
+license: MIT
+version: 1.0.0
+date-released: 2026-07-04
+url: "https://github.com/redamancy231-create/etf-pattern-match-pybind11"
+abstract: "A pure-computation extraction from a Chinese ETF pattern-matching strategy, accelerated with pybind11 and C++20. Achieves 34× DTW and 53× pattern-match speedup over pure Python. Includes 54 unit tests, interactive Jupyter notebook, reproducible benchmarks, and 4-round multi-model independent review closure."
+keywords:
+  - "etf"
+  - "pattern-matching"
+  - "dtw"
+  - "dynamic-time-warping"
+  - "pybind11"
+  - "c++20"
+  - "quantitative-finance"
+  - "high-performance-computing"
