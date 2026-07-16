@@ -10,7 +10,7 @@
 | 类别 | 项目 | 执行者 |
 |------|------|--------|
 | 提取 | V3.3.py → 6 Python 纯计算模块（1087 行，零掘金 SDK 依赖） | DeepSeek-V4-Pro |
-| C++ | etf_core 统一加速模块（8 函数，DTW 37x / pattern_match 61x） | DeepSeek-V4-Pro |
+| C++ | etf_core 统一加速模块（8 函数，DTW 34x / pattern_match 53x） | DeepSeek-V4-Pro |
 | C++ | pattern_match_batch（2.2x batch 加速，预计算缓存架构） | Kimi-K2.7-Code |
 | 审查 | Kimi 魔鬼代言人 R1 + GPT-5.5 完备性 R2 + GPT-5.5 最终 R3 + Kimi 代码改进 R4 | 三后端 |
 | 测试 | 54 单元测试全部通过（DTW 27 + 技术 12 + 形态匹配 15） | DeepSeek + Kimi |

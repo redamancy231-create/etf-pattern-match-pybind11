@@ -77,8 +77,8 @@ ls build/Release/Release/*.cp312-win_amd64.pyd
 
 | 函数 Function | Python | C++ | 加速比 Speedup |
 |------|--------|-----|--------|
-| DTW (L=19) | 98 µs | 2.7 µs | **37x** |
-| pattern_match_single | 14.3 ms | 0.23 ms | **61x** |
+| DTW (L=19) | 96 µs | 2.8 µs | **34×** |
+| pattern_match_single | 14.0 ms | 0.26 ms | **53×** |
 | pattern_match_batch (100 T_idx) | 50 ms¹ | 23 ms | **2.2x¹** |
 
 > ¹ C++ single ×100 vs C++ batch ×1 — batch-interface overhead reduction, not Python-vs-C++.

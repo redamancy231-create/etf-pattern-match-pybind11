@@ -14,8 +14,8 @@
 ### Initial Release
 
 - pybind11/C++20 acceleration of ETF pattern-matching core
-- DTW distance: 98µs → 2.7µs (37x speedup)
-- Pattern match: 14.3ms → 0.23ms (61x speedup)
+- DTW distance: 96µs → 2.8µs (34x speedup)
+- Pattern match: 14.0ms → 0.26ms (53x speedup)
 - Batch pattern match: 2.2x end-to-end (100 calls)
 - 6 extracted pure-computation Python modules (`src/core/`)
 - 8-function unified C++ acceleration module (`src/cpp/etf_core.cpp`, ~1,100 lines)
