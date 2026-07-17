@@ -1,7 +1,7 @@
 # etf-pattern-match-pybind11 改进方案
 
 > 2026-07-16 · 初稿 DeepSeek-V4-Pro · 审查 GPT-5.6-Sol（via Codex CLI）
-> 状态：修订 v1.1（根据 Codex 审查意见调整优先级和范围）
+> 状态：✅ 全部完成（2026-07-17 执行，2026-07-18 确认）
 
 ## 概述
 
@@ -9,7 +9,7 @@
 
 ## 改进项
 
-### 🔴 P0 — 完整安装链路
+### ✅ P0 — 完整安装链路（已完成）
 
 **问题**：用户必须手动 cmake 编译。对 Python 用户门槛太高。
 
@@ -70,7 +70,7 @@ pip install git+https://github.com/redamancy231-create/etf-pattern-match-pybind1
   - Python 3.13+（cvxpy/ecos 可能不兼容）
 ```
 
-### 🟡 P1 — 性能可复现性
+### ✅ P1 — 性能可复现性（已完成）
 
 **修订**（审查意见：性能数字来自均值还是最优值？需要可运行脚本而非一次性文档）。
 
@@ -102,11 +102,11 @@ benchmarks/
 - 记录: Python 版本、C++ 编译器、优化选项、commit SHA
 ```
 
-### 🟢 P2 — 学术引用支持
+### ✅ P2 — 学术引用支持（已完成）
 
 **方案**：添加 `CITATION.cff` + README 底部 BibTeX 块（参考 ma-case-study-pipeline）。
 
-### 🟢 P2 — 贡献者基础文档
+### ✅ P2 — 贡献者基础文档（已完成）
 
 **修订**（审查意见：比 Community 宣传页优先级高）。
 
