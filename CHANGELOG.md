@@ -9,7 +9,7 @@
 - Key fixes: DTW rolling array `prev[0]` bug, shared `pattern_match_core`, GIL release coverage, NaN window-level checks, ADX initialization alignment
 - scipy → pure NumPy `rankdata` (resolved CI dependency failure)
 - Performance numbers re-benchmarked and synced across all 8 references (README, CLAUDE.md, notebook, social preview, etc.)
-- Review prompt archive in `审查提示词/` (excluded from published repo per `.gitignore`)
+- Review prompt archive in `_review/` (excluded from published repo per `.gitignore`)
 
 ### Initial Release
 

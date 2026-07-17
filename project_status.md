@@ -60,7 +60,7 @@
 
 ### 不做的决定
 
-- 审查摘要不公开（审查提示词决定不公开，保持一致）
+- 审查摘要不公开（_review/ 决定不公开，保持一致）
 - Homepage URL 留空
 - 不加 CONTRIBUTING.md / SECURITY.md / PR 模板（单人编程实践项目，过度设计）
 
@@ -91,5 +91,5 @@
 - **DTW 滚动数组 prev[0] bug**：双行 swap 后 prev[0] 在偶数行残留 0.0 致 pj1 取错。修法：每次 swap 后 `prev[0]=INF`。此 pattern 适用于所有双行滚动 DP。
 - **scipy 引入致 CI 失败**：`scipy.stats.rankdata` 不在 CI 依赖 → 4 测试失败。已用 12 行纯 NumPy `_average_rank` 替代。教训：新增 import 前确认 CI 环境依赖清单。
 - **性能数字更新**：37× DTW / 61× pattern_match / 2.2× batch。全项目 8 处引用同步（README/CLAUDE/project_status/notebook/social-preview/Description/twitter/简历）。
-- **审查提示词归档**：`审查提示词/` 目录新增 3 文件（GPT-5.6-Sol 审查 + Kimi 回归审查 + Kimi 结论），按 `.gitignore` 排除不发布。
+- **审查提示词归档**：`_review/conclusions/` 目录新增 3 文件（GPT-5.6-Sol 审查 + Kimi 回归审查 + Kimi 结论），按 `.gitignore` 排除不发布。
 - **提交记录**：5 commits → `redamancy231-create/etf-pattern-match-pybind11` master，全部 pre-push 54/54 通过。
