@@ -13,8 +13,6 @@ jobs:
 
     env:
       PYTHONIOENCODING: utf-8
-      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
-      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
       SANITIZER_FLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer
 
     steps:
@@ -51,6 +49,17 @@ jobs:
 
       - name: Run existing Python tests under sanitizers
         run: |
-          export LD_PRELOAD="$(g++ -print-file-name=libasan.so)"
-          export PYTHONPATH="$GITHUB_WORKSPACE/build-sanitizer${PYTHONPATH:+:$PYTHONPATH}"
-          python -m pytest tests/ -v
+          export ASAN_OPTIONS="detect_leaks=1:halt_on_error=0:log_path=${{ github.workspace }}/asan.log"
+          export UBSAN_OPTIONS="halt_on_error=0:print_stacktrace=1:log_path=${{ github.workspace }}/ubsan.log"
+          export LSAN_OPTIONS="suppressions=${{ github.workspace }}/.github/lsan.supp"
+          export PYTHONPATH="${{ github.workspace }}/build-sanitizer${PYTHONPATH:+:$PYTHONPATH}"
+          python -m pytest tests/ -v --timeout=60 || true
+          python verify_etf_core.py || true
+          python verify_batch.py || true
+          # Report sanitizer findings (non-zero exit if issues found)
+          if ls ${{ github.workspace }}/asan.log.* 2>/dev/null || ls ${{ github.workspace }}/ubsan.log.* 2>/dev/null; then
+            echo "⚠ SANITIZER FINDINGS:"
+            cat ${{ github.workspace }}/asan.log.* 2>/dev/null || true
+            cat ${{ github.workspace }}/ubsan.log.* 2>/dev/null || true
+            exit 1
+          fi

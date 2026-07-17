@@ -61,17 +61,24 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
+      - name: Set PYTHONPATH (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: echo "PYTHONPATH=build:${{ github.workspace }}/build" >> $GITHUB_ENV
+
       - name: Run tests
         env:
           PYTHONIOENCODING: utf-8
+          PYTHONPATH: ${{ env.PYTHONPATH }}
         run: python -m pytest tests/ -v
 
       - name: Verify C++ vs Python consistency
         env:
           PYTHONIOENCODING: utf-8
+          PYTHONPATH: ${{ env.PYTHONPATH }}
         run: python verify_etf_core.py
 
       - name: Verify batch matching
         env:
           PYTHONIOENCODING: utf-8
+          PYTHONPATH: ${{ env.PYTHONPATH }}
         run: python verify_batch.py
