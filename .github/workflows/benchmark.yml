@@ -1,0 +1,207 @@
+# GPT-5.6-Sol (via Codex CLI), 2026-07-17
+name: Performance Benchmark
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: performance-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ cmake
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pybind11
+
+      - name: Configure CMake
+        run: |
+          python_path="$(python -c 'import sys; print(sys.executable)')"
+          cmake -B build -DPython_EXECUTABLE="$python_path" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=build:${{ github.workspace }}/build" >> "$GITHUB_ENV"
+
+      - name: Locate baseline
+        id: baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          baseline="$(
+            git log --format= --name-only --diff-filter=AM -- 'benchmarks/results/*.json' \
+              | awk 'NF { print; exit }'
+          )"
+
+          if [[ -z "$baseline" || ! -f "$baseline" ]]; then
+            baseline="$(find benchmarks/results -maxdepth 1 -type f -name '*.json' | sort | tail -n 1)"
+          fi
+
+          if [[ -z "$baseline" || ! -f "$baseline" ]]; then
+            echo "::error::No baseline JSON file found in benchmarks/results/."
+            exit 1
+          fi
+
+          snapshot="$RUNNER_TEMP/benchmark-baseline.json"
+          cp "$baseline" "$snapshot"
+          echo "source=$baseline" >> "$GITHUB_OUTPUT"
+          echo "snapshot=$snapshot" >> "$GITHUB_OUTPUT"
+          echo "Using baseline: $baseline"
+
+      - name: Run benchmark
+        id: current
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="benchmarks/results/$(date -u +%F)-${GITHUB_SHA::7}.json"
+          echo "path=$result" >> "$GITHUB_OUTPUT"
+          python benchmarks/run_benchmark.py --repeat 50 --output-json "$result"
+
+      - name: Compare with baseline
+        id: compare
+        shell: bash
+        env:
+          BASELINE_JSON: ${{ steps.baseline.outputs.snapshot }}
+          BASELINE_SOURCE: ${{ steps.baseline.outputs.source }}
+          CURRENT_JSON: ${{ steps.current.outputs.path }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          WARN_RATIO = 1.15
+          FAIL_RATIO = 1.25
+
+          def load_medians(path: str) -> dict[str, float]:
+              payload = json.loads(Path(path).read_text(encoding="utf-8"))
+              return {
+                  row["function"]: float(row["cpp_median_us"])
+                  for row in payload["results"]
+              }
+
+          baseline = load_medians(os.environ["BASELINE_JSON"])
+          current = load_medians(os.environ["CURRENT_JSON"])
+
+          missing = sorted(set(baseline) - set(current))
+          unexpected = sorted(set(current) - set(baseline))
+          if missing or unexpected:
+              details = []
+              if missing:
+                  details.append(f"missing current results: {', '.join(missing)}")
+              if unexpected:
+                  details.append(f"unexpected current results: {', '.join(unexpected)}")
+              print(f"::error::Benchmark result mismatch ({'; '.join(details)}).")
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write("update_baseline=false\n")
+              raise SystemExit(1)
+
+          warnings = []
+          failures = []
+          table = [
+              f"{'Function':<24} {'Baseline':>12} {'Current':>12} {'Change':>18}",
+              f"{'-' * 24} {'-' * 12} {'-' * 12} {'-' * 18}",
+          ]
+
+          for function, baseline_median in baseline.items():
+              current_median = current[function]
+              if baseline_median <= 0:
+                  print(f"::error::Invalid non-positive baseline median for {function}.")
+                  with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                      output.write("update_baseline=false\n")
+                  raise SystemExit(1)
+
+              change_percent = (current_median / baseline_median - 1.0) * 100.0
+              if current_median > baseline_median * FAIL_RATIO:
+                  status = "FAIL"
+                  failures.append((function, change_percent))
+              elif current_median > baseline_median * WARN_RATIO:
+                  status = "WARN"
+                  warnings.append((function, change_percent))
+              else:
+                  status = "OK"
+
+              change = f"{change_percent:+.1f}% {status}"
+              table.append(
+                  f"{function:<24} "
+                  f"{baseline_median:>8.1f} us "
+                  f"{current_median:>8.1f} us "
+                  f"{change:>18}"
+              )
+
+          print(f"Baseline file: {os.environ['BASELINE_SOURCE']}")
+          print()
+          print("\n".join(table))
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Performance regression check\n\n")
+              summary.write(f"Baseline: `{os.environ['BASELINE_SOURCE']}`\n\n")
+              summary.write("```text\n")
+              summary.write("\n".join(table))
+              summary.write("\n```\n")
+
+          for function, change_percent in warnings:
+              print(
+                  f"::warning title=Performance regression::{function} slowed by "
+                  f"{change_percent:.1f}% (warning threshold: 15%)."
+              )
+          for function, change_percent in failures:
+              print(
+                  f"::error title=Performance regression::{function} slowed by "
+                  f"{change_percent:.1f}% (failure threshold: 25%)."
+              )
+
+          update_baseline = not warnings and not failures
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"update_baseline={'true' if update_baseline else 'false'}\n")
+
+          if failures:
+              sys.exit(1)
+          PY
+
+      - name: Update baseline
+        if: success() && steps.compare.outputs.update_baseline == 'true'
+        env:
+          CURRENT_JSON: ${{ steps.current.outputs.path }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$CURRENT_JSON"
+
+          if git diff --cached --quiet; then
+            echo "Baseline is unchanged; nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(benchmark): update performance baseline [skip ci]"
+          git push origin HEAD:master
