@@ -8,10 +8,11 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Featured](https://img.shields.io/badge/featured-Chinese_Independent_Developer-orange)](https://github.com/1c7/chinese-independent-developer)
 
-**语言 / Languages**：简体中文 · [English](en/README.md)
+**语言 / Languages**：简体中文 · [English](en/README.md) · [正體中文](zh-Hant/README.md)
 
 [![中文](https://img.shields.io/badge/lang-中文-red)]()
 [![English](https://img.shields.io/badge/lang-English-blue)](en/README.md)
+[![正體中文](https://img.shields.io/badge/lang-正體中文-green)](zh-Hant/README.md)
 
 > **English Abstract**: Pure computation modules extracted from a 3,836-line Chinese ETF pattern-matching strategy (V3.3) and accelerated with **pybind11 + C++20**. DTW 34× (96µs→2.8µs), pattern match 53× (14.0ms→0.26ms), batch 2.2× end-to-end. Algorithm logic unchanged — this is a Python/C++ hybrid engineering practice project, not a trading system. 54 tests, 2 verification scripts, interactive Jupyter demo, pip install ready. Full **[English README](en/README.md)** available.
 

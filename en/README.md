@@ -8,10 +8,11 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Featured](https://img.shields.io/badge/featured-Chinese_Independent_Developer-orange)](https://github.com/1c7/chinese-independent-developer)
 
-**Languages**: English · [简体中文](../README.md)
+**Languages**: English · [简体中文](../README.md) · [正體中文](../zh-Hant/README.md)
 
 [![English](https://img.shields.io/badge/lang-English-blue)]()
 [![中文](https://img.shields.io/badge/lang-中文-red)](../README.md)
+[![正體中文](https://img.shields.io/badge/lang-正體中文-green)](../zh-Hant/README.md)
 
 > ⚡ DTW 96µs→2.8µs (34x) | Pattern Match 14.0ms→0.26ms (53x) | pybind11+C++20 | pip install ready
 
