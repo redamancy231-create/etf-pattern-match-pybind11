@@ -14,7 +14,7 @@
 [![English](https://img.shields.io/badge/lang-English-blue)](en/README.md)
 [![正體中文](https://img.shields.io/badge/lang-正體中文-green)](zh-Hant/README.md)
 
-> **English Abstract**: Pure computation modules extracted from a 3,836-line Chinese ETF pattern-matching strategy (V3.3) and accelerated with **pybind11 + C++20**. DTW 34× (96µs→2.8µs), pattern match 53× (14.0ms→0.26ms), batch 2.2× end-to-end. Algorithm logic unchanged — this is a Python/C++ hybrid engineering practice project, not a trading system. 54 tests, 2 verification scripts, interactive Jupyter demo, pip install ready. Full **[English README](en/README.md)** available.
+> **English Abstract**: This project extracts compute-only modules from a 3,836-line Chinese-language ETF pattern-matching strategy (V3.3) and accelerates them with **pybind11 and C++20**. DTW achieves a 34× speedup (96 µs → 2.8 µs), a single pattern-matching call achieves a 53× speedup (14.0 ms → 0.26 ms), and batching provides a 2.2× speedup over 100 individual C++ calls. The algorithms are unchanged. This is a Python/C++ hybrid engineering project, not a trading system. It includes 54 tests, two verification scripts, and an interactive Jupyter demo, and it can be installed with pip. The full **English README** is available.
 
 > ⚡ DTW 96µs→2.8µs (34x) | 形态匹配 14.0ms→0.26ms (53x) | pybind11+C++20 | pip install 即用
 
