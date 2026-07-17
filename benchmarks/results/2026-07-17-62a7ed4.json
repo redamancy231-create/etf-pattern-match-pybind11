@@ -1,0 +1,115 @@
+{
+  "environment": {
+    "os": "Linux 6.17.0-1020-azure",
+    "python": "3.12.13",
+    "numpy": "2.5.1",
+    "compiler": "unknown",
+    "optimization": "unknown",
+    "cpu": "x86_64",
+    "machine": "x86_64",
+    "commit": "62a7ed4",
+    "date": "2026-07-17"
+  },
+  "methodology": {
+    "warmup_runs": 5,
+    "timed_runs": 50,
+    "statistic": "median",
+    "ci_level": 95,
+    "ci_method": "percentile",
+    "percentiles": [
+      2.5,
+      97.5
+    ],
+    "timer": "time.perf_counter",
+    "timing_unit": "microseconds",
+    "input_conversion_included": false,
+    "call_boundary_included": true
+  },
+  "inputs": {
+    "random_seed": 42,
+    "dtw_length": 19,
+    "dtw_window": 5,
+    "pattern_prices_length": 1000,
+    "pattern_single_T_idx": 500,
+    "batch_timestamps": 100,
+    "batch_T_idx_range": [
+      400,
+      499
+    ],
+    "batch_api_note": "etf_core.pattern_match_batch accepts one 1-D price series; 50 is cos_prefilter_top."
+  },
+  "results": [
+    {
+      "function": "dtw_distance",
+      "python_median_us": 141.10200000061468,
+      "cpp_median_us": 0.9515000023441189,
+      "speedup_median": 148.29427183709436,
+      "python_mean_us": 142.301180000004,
+      "cpp_mean_us": 0.9777399999677527,
+      "python_std_us": 3.0141133716382194,
+      "cpp_std_us": 0.061659965954713396,
+      "python_ci_95": [
+        139.9934999996688,
+        149.79802500096895
+      ],
+      "cpp_ci_95": [
+        0.9209999960901882,
+        1.1129999958114922
+      ]
+    },
+    {
+      "function": "cosine_similarity",
+      "python_median_us": 3.5605000014982124,
+      "cpp_median_us": 0.6710000022280838,
+      "speedup_median": 5.3062592990691835,
+      "python_mean_us": 3.5734600001546823,
+      "cpp_mean_us": 0.6823999997607189,
+      "python_std_us": 0.05342826972048819,
+      "cpp_std_us": 0.043566042609028605,
+      "python_ci_95": [
+        3.507249995315931,
+        3.6907249970852263
+      ],
+      "cpp_ci_95": [
+        0.653249999160721,
+        0.7542500020107923
+      ]
+    },
+    {
+      "function": "pattern_match_single",
+      "python_median_us": 20483.66449999861,
+      "cpp_median_us": 135.43800000448414,
+      "speedup_median": 151.2401578531906,
+      "python_mean_us": 20871.78958000038,
+      "cpp_mean_us": 136.6447799998127,
+      "python_std_us": 1399.5440916005248,
+      "cpp_std_us": 2.929983828736532,
+      "python_ci_95": [
+        20394.42994999945,
+        24862.57050000233
+      ],
+      "cpp_ci_95": [
+        134.14302499956676,
+        144.46374999899092
+      ]
+    },
+    {
+      "function": "pattern_match_batch",
+      "python_median_us": 1914420.458000002,
+      "cpp_median_us": 4999.851000007993,
+      "speedup_median": 382.89550188534446,
+      "python_mean_us": 1909134.1213200004,
+      "cpp_mean_us": 5009.993159997066,
+      "python_std_us": 14631.335489056779,
+      "cpp_std_us": 28.675216963735387,
+      "python_ci_95": [
+        1885572.5724499985,
+        1936398.9649250016
+      ],
+      "cpp_ci_95": [
+        4988.50007500522,
+        5055.468424993137
+      ]
+    }
+  ]
+}
