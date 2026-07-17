@@ -38,5 +38,5 @@ model_cache/
 .ipynb_checkpoints/
 
 # Internal review artifacts (not for release)
-审查提示词/
+_review/
 _translation_output.md
