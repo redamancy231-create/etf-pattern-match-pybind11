@@ -93,7 +93,6 @@ jobs:
           python - <<'PY'
           import json
           import os
-          import sys
           from pathlib import Path
 
           WARN_RATIO = 1.15
@@ -177,28 +176,13 @@ jobs:
                   f"{change_percent:.1f}% (failure threshold: 25%)."
               )
 
-          update_baseline = not warnings and not failures
+          # Report-only: GitHub-hosted runner CPUs are not comparable to local
+          # hardware. Never fail CI on benchmark regressions.
+          print()
+          print("Note: comparison against local baseline is for information only.")
+          print("GitHub-hosted runner performance varies — do not use as a gate.")
+
+          update_baseline = False
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"update_baseline={'true' if update_baseline else 'false'}\n")
-
-          if failures:
-              sys.exit(1)
+              output.write("update_baseline=false\n")
           PY
-
-      - name: Update baseline
-        if: success() && steps.compare.outputs.update_baseline == 'true'
-        env:
-          CURRENT_JSON: ${{ steps.current.outputs.path }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- "$CURRENT_JSON"
-
-          if git diff --cached --quiet; then
-            echo "Baseline is unchanged; nothing to commit."
-            exit 0
-          fi
-
-          git commit -m "chore(benchmark): update performance baseline [skip ci]"
-          git push origin HEAD:master
