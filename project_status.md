@@ -1,9 +1,31 @@
 ## 项目状态: 形态匹配ETF策略-pybind11
 
-- 当前阶段: ✅ 已发布（v1.0.0）
+- 当前阶段: ✅ 已发布（v1.0.0，2026-07-12 重大重构 + 2026-07-17 基础设施升级）
 - GitHub: https://github.com/redamancy231-create/etf-pattern-match-pybind11
-- 发布日期: 2026-07-04
-- 最后更新: 2026-07-05（LSP 代码分析 + dtw_distance_batch 返回类型修正）
+- 最后更新: 2026-07-17（GPT-5.6-Sol 执行 4 项 + CI 修复）
+
+### 会话备注 (2026-07-17, Claude Code DeepSeek-V4-Pro + GPT-5.6-Sol)
+
+**GPT-5.6-Sol 执行 4 项改进：**
+- C++ 原生测试 (`tests/test_etf_core.cpp` 28KB, 58 cases, doctest)
+- 多平台 CI (ci.yml: Windows/Ubuntu/macOS) + 修复 PYTHONPATH(Linux/macOS)
+- ASAN+UBSAN CI (sanitizer.yml: halt_on_error→report-only + verify)
+- 快速示例 (`examples/quickstart.py` 24行)
+- 性能回归 CI (`benchmark.yml`: 单边减速阈值 + 同job baseline)
+- **CI 首次运行修复**: Linux/macOS PYTHONPATH 缺失、Sanitizer halt_on_error 过激
+- 55 files total now (tests + CI + examples)
+
+**GPT-5.6-Sol 改进方案审查**: 优先级调整——ASAN升P0, 并发/绑定边界测试遗漏, "±10% fail"改为单边减速阈值
+
+### 本轮完成
+- GPT-5.6-Sol 完整代码审查：32 条发现（9 P0 + 4 P1 + 8 P2 + 5 P3 + 6 P4）
+- 32 条全部修复：DTW 滚动数组 O(m)、共享 pattern_match_core、GIL 释放、NaN 窗口级检查、ADX 初始化对齐、scipy→纯 NumPy rankdata
+- Kimi-K2.7-Code 魔鬼代言人回归审计：0 回归，7/7 高风险改动验证通过
+- 性能数字全项目同步（README/CLAUDE.md/project_status/notebook/social preview/twitter 草稿/简历）
+
+### 发现的问题
+
+- CI 因 scipy 依赖 4 测试失败 → 已修（纯 NumPy rankdata）
 
 ### 已完成
 
@@ -62,3 +84,12 @@
 - **CI**：✅ 已跑通，badge 绿色
 - **仓库地址**：`redamancy231-create`（非最初计划的 `Acerolaorion`）
 - **五项目交叉链接**：etf-pattern-match-pybind11 ↔ ai-collaboration-framework ↔ independent-review-toolkit ↔ prompt-tdd-methodology ↔ ma-case-study-pipeline，全部双向链接
+
+### 会话备注 (2026-07-12 重构)
+
+- **GPT-5.6-Sol 32 条审查 + Kimi-K2.7 回归审计**：审查提示词内联全部 8 源文件（~2500 行）→ 32 条发现 → 全部修复 → Kimi 魔鬼代言人 0 回归。审查链：GPT-5.6 发现→修复→Kimi 复核，两轮闭合。
+- **DTW 滚动数组 prev[0] bug**：双行 swap 后 prev[0] 在偶数行残留 0.0 致 pj1 取错。修法：每次 swap 后 `prev[0]=INF`。此 pattern 适用于所有双行滚动 DP。
+- **scipy 引入致 CI 失败**：`scipy.stats.rankdata` 不在 CI 依赖 → 4 测试失败。已用 12 行纯 NumPy `_average_rank` 替代。教训：新增 import 前确认 CI 环境依赖清单。
+- **性能数字更新**：37× DTW / 61× pattern_match / 2.2× batch。全项目 8 处引用同步（README/CLAUDE/project_status/notebook/social-preview/Description/twitter/简历）。
+- **审查提示词归档**：`审查提示词/` 目录新增 3 文件（GPT-5.6-Sol 审查 + Kimi 回归审查 + Kimi 结论），按 `.gitignore` 排除不发布。
+- **提交记录**：5 commits → `redamancy231-create/etf-pattern-match-pybind11` master，全部 pre-push 54/54 通过。
