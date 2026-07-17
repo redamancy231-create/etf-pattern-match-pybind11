@@ -1,8 +1,18 @@
 ## 项目状态: 形态匹配ETF策略-pybind11
 
-- 当前阶段: ✅ 已发布（v1.0.0，2026-07-12 重大重构 + 2026-07-17 基础设施升级）
+- 当前阶段: ✅ 已发布（v1.0.0，2026-07-12 重大重构 + 2026-07-17 基础设施升级 + 2026-07-18 文档多语言化）
 - GitHub: https://github.com/redamancy231-create/etf-pattern-match-pybind11
-- 最后更新: 2026-07-17（GPT-5.6-Sol 执行 4 项 + CI 修复）
+- 最后更新: 2026-07-18（三语言 README + GPT-5.6-Sol 审查修复 + improvement_plan 闭合）
+
+### 会话备注 (2026-07-18, Claude Code DeepSeek-V4-Pro + GPT-5.6-Sol)
+
+**文档多语言化与审查：**
+- README 拆分为三语言独立版本（简体中文 `README.md` + English `en/README.md` + 正體中文 `zh-Hant/README.md`），三向交叉链接 + 三色语言徽章
+- `docs/performance-analysis.md` 拆分中英两个独立文件（`performance-analysis.md` + `performance-analysis.zh-CN.md`），头部互链
+- GPT-5.6-Sol 两轮审查（机械一致性+链接 / 正體中文+英文质量），33 项发现全部修复
+- 审查报告从 `docs/reviews/` 迁移至 `_review/conclusions/`，`_review/` 全部取消 git 追踪
+- `improvement_plan.md` 四项改进全部标记完成 ✅
+- `project_status.md` 交叉链接从 4→6 更新、`docs/file-index.md` 新增 `en/` `zh-Hant/` 引用
 
 ### 会话备注 (2026-07-17, Claude Code DeepSeek-V4-Pro + GPT-5.6-Sol)
 
@@ -48,11 +58,16 @@
 | CI | GitHub Actions CI（Windows + MSVC）✅ 已跑通 | DeepSeek-V4-Pro |
 | 发布 | Git 初始提交 + GitHub 仓库 + push | Acerolaorion |
 | 仓库设置 | Description 中英双语 + Topics 9 个 + Wiki/Projects 关闭 + Discussions 开启 + Auto-delete branches 开启 | DeepSeek-V4-Pro |
-| 页面 | README 中英双语 + FAQ + Mermaid 图 + 交叉链接 4 个关联 GitHub 项目 | DeepSeek-V4-Pro |
+| 页面 | README 三语言独立版本（简中/English/正體）+ FAQ + Mermaid 图 + 交叉链接 6 个关联 GitHub 项目 | DeepSeek-V4-Pro |
 | 页面 | Social Preview 图片（深蓝渐变 + 数据卡片 + 技术栈标签） | DeepSeek-V4-Pro |
 | 页面 | Issue 模板（Bug Report + Question） | DeepSeek-V4-Pro |
 | 版本 | v1.0.0 tag | Acerolaorion |
 | 修复 | dtw_distance_batch 返回类型注解修正（`-> np.ndarray` → `-> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]`） | DeepSeek-V4-Pro |
+| 文档 | README 三语言拆分（简中/English/正體）+ 交叉链接 + 语言徽章 | DeepSeek-V4-Pro |
+| 文档 | docs/performance-analysis.md 中英拆分 | DeepSeek-V4-Pro |
+| 审查 | GPT-5.6-Sol README 三语言审查（机械一致性 + 正體中文/英文质量），33 项修复 | GPT-5.6-Sol |
+| 清理 | _review/ 取消 git 追踪（此前 git mv 破坏了 .gitignore 排除规则） | DeepSeek-V4-Pro |
+| 状态 | improvement_plan.md 四项改进全部标记完成 ✅ | DeepSeek-V4-Pro |
 
 ### 待完成
 

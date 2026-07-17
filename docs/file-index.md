@@ -25,10 +25,15 @@
 - [ci.yml](../.github/workflows/ci.yml) — GitHub Actions CI（Windows + MSVC）
 
 ## 文档 | Documentation
-- [README.md](../README.md) — GitHub 首页 | GitHub homepage
+- [README.md](../README.md) — GitHub 首页（简体中文）| GitHub homepage (Simplified Chinese)
+- [en/README.md](../en/README.md) — English README
+- [zh-Hant/README.md](../zh-Hant/README.md) — 正體中文 README
 - [CLAUDE.md](../CLAUDE.md) — 开发笔记与 pybind11 经验 | Development notes and pybind11 lessons
 - [project_status.md](../project_status.md) — 项目状态 | Project status
+- [improvement_plan.md](../improvement_plan.md) — 改进方案（已完成 ✅）| Improvement plan (completed ✅)
 - [docs/file-index.md](file-index.md) — 本文件 | This file
+- [docs/performance-analysis.md](performance-analysis.md) — Amdahl 性能分析（英文）| Amdahl performance analysis (English)
+- [docs/performance-analysis.zh-CN.md](performance-analysis.zh-CN.md) — Amdahl 性能分析（简体中文）
 
 ## 设计文档（中文）| Design Documents (Chinese)
 - [初始方案 Initial plan (zh-CN)](reviews/initial-plan.zh-CN.md) — 初始设计提案 | Initial design proposal
