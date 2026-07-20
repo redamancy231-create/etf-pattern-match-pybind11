@@ -40,3 +40,4 @@ model_cache/
 # Internal review artifacts (not for release)
 _review/
 _translation_output.md
+project_status.md
