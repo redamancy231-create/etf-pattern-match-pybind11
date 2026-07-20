@@ -168,6 +168,7 @@ flowchart LR
 | [**M&A Case Study Pipeline**](https://github.com/redamancy231-create/ma-case-study-pipeline) | **同级项目**——多模型学术生产流水线；同样强调方法的可移植性和跨后端验证 |
 | [**DOCX Pipeline**](https://github.com/redamancy231-create/docx-pipeline) | **同级项目**——Markdown → 中文 DOCX 泛化管道，双后端 + Mermaid 渲染 |
 | [**Claude Skills**](https://github.com/redamancy231-create/claude-skills) | **同级项目**——3 个实战验证的 Claude Code Skill，从真实项目工作流提取 |
+| [**Methodology Handbook**](https://github.com/redamancy231-create/methodology-handbook) | **同级项目**——50 条 AI 协作踩坑速查手册；本项目的多轮审查方法论是该手册多个条目的实证案例 |
 
 ## 详细文档
 
