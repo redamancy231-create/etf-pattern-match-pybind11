@@ -170,3 +170,5 @@ All source files are annotated with model provenance.
 ## Detailed Documentation
 
 Development notes and pybind11 lessons: [CLAUDE.md](../CLAUDE.md) — build details, ABI troubleshooting, GIL management, floating-point tolerances, and review traceability.
+
+Fork modification directions: [docs/fork-modification-directions.md](../docs/fork-modification-directions.md) — 10 major directions, 36 concrete pathways, sorted by implementation barrier.

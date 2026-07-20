@@ -173,3 +173,5 @@ flowchart LR
 ## 详细文档
 
 开发笔记与 pybind11 实战经验：[CLAUDE.md](CLAUDE.md) — 构建细节、ABI 排错、GIL 管理、浮点容差、审查追溯。
+
+Fork 修改方向全景分析：[docs/fork-modification-directions.md](docs/fork-modification-directions.md) — 10 大方向、36 条具体路径、按实现门槛排序。
