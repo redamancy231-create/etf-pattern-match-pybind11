@@ -2,7 +2,7 @@
 
 > Generated: 2026-07-20 · Revised: 2026-07-21
 > Model provenance: DeepSeek-V4-Pro (via Claude Code CLI) · Review: GPT-5.6-Sol (via Codex CLI)
-> Based on: Full source code from the project README/CLAUDE.md/src + improvement_plan.md + project_status.md
+> Based on: Full source code from the project README/CLAUDE.md/src + project_status.md
 > Review report: `_review/conclusions/GPT-5.6-Sol_fork-directions-review_2026-07-21.md`
 
 ## Project Status at a Glance
@@ -401,7 +401,7 @@ Transform the system from "offline batch feature computation" to "automatic dail
 
 Extend the existing `benchmarks/` framework:
 - Automatically compare benchmark JSON files across commits in CI
-- One-sided slowdown threshold → automatic alert (re: improvement_plan P1)
+- One-sided slowdown threshold → automatic alert
 - Multi-hardware baselines with reference values for different CPU generations
 
 ---
@@ -604,7 +604,6 @@ Expressions such as "production-ready," "strategy improvement," and "validation 
 - `verify_batch.py` — Batch pattern matching verification
 
 ### Documentation
-- `improvement_plan.md` — Four completed improvements (P0-P2), available as a starting point for a fork
 - `CLAUDE.md` — Practical pybind11 experience, GIL management, and ABI troubleshooting
 - `project_status.md` — Review-chain lineage and session history
 - `benchmarks/run_benchmark.py` — Reproducible benchmarking

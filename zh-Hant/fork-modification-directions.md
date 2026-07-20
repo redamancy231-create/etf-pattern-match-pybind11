@@ -2,7 +2,7 @@
 
 > 生成日期: 2026-07-20 · 修訂: 2026-07-21
 > 模型 provenance: DeepSeek-V4-Pro (via Claude Code CLI) · 審查: GPT-5.6-Sol (via Codex CLI)
-> 基於: 項目 README/CLAUDE.md/src 全量源碼 + improvement_plan.md + project_status.md
+> 基於: 項目 README/CLAUDE.md/src 全量源碼 + project_status.md
 > 審查報告: `_review/conclusions/GPT-5.6-Sol_fork-directions-review_2026-07-21.md`
 
 ## 項目現狀速覽
@@ -401,7 +401,7 @@ Fork 可在解決前置條件後:
 
 在現有 `benchmarks/` 框架上擴展:
 - CI 中自動比較不同 commit 的 benchmark JSON
-- 單邊減速閾值 → 自動告警(re: improvement_plan P1)
+- 單邊減速閾值 → 自動告警
 - 多硬件基線(不同 CPU 世代的參考值)
 
 ---
@@ -604,7 +604,6 @@ pattern_match_single(..., return_details=True)
 - `verify_batch.py` — 批量形態匹配驗證
 
 ### 文檔
-- `improvement_plan.md` — 已完成的四項改進(P0-P2)，可作爲 fork 的起點
 - `CLAUDE.md` — pybind11 實戰經驗、GIL 管理、ABI 排錯
 - `project_status.md` — 審查鏈譜系、會話歷史
 - `benchmarks/run_benchmark.py` — 可復現基準測試

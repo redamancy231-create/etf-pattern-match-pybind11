@@ -33,7 +33,6 @@
 - [zh-Hant/README.md](zh-Hant/README.md) — 正體中文 README
 - [CLAUDE.md](CLAUDE.md) — 开发笔记与 pybind11 经验
 - [project_status.md](project_status.md) — 项目状态追踪
-- [improvement_plan.md](improvement_plan.md) — 改进方案（已完成 ✅）
 - [docs/file-index.md](docs/file-index.md) — 关键文件索引
 - [docs/performance-analysis.md](docs/performance-analysis.md) — Amdahl 性能分析（英文）
 - [docs/performance-analysis.zh-CN.md](docs/performance-analysis.zh-CN.md) — Amdahl 性能分析（简体中文）
