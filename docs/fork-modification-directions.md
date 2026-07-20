@@ -86,7 +86,7 @@
 
 ### 2.1 GPU 加速(CUDA/ROCm)
 
-DTW 的批量计算天然适合 GPU: `dtw_distance_batch` 将一个 query 对 N 个 candidate 做一端远端循环，可映射到 CUDA kernel。
+DTW 的批量计算天然适合 GPU: `dtw_distance_batch` 将一个 query 对 N 个 candidate 做一对多循环，可映射到 CUDA kernel。
 
 - **CUDA C++**: 替换 `pattern_match_core` 的 CPU 循环为手写 kernel
 - **cuBLAS**: 余弦相似度计算可转为矩阵乘法(candidates × query = batched dot product)
@@ -458,8 +458,8 @@ pattern_match_single(..., return_details=True)
 
 ### 10.2 审查方法论泛化
 
-本项目的核心方法学价值在于其**审查流程**(多轮异后端审查 + 0 回归)。Fork 将这套 SOP 应用于:
-- 其他量化策略的 C++ 加速 → 通用框架: 提取纯计算 → pybind11 加速 → 异后端一致性验证
+本项目的核心方法学价值在于其**审查流程**(多轮跨后端审查 + 0 回归)。Fork 将这套 SOP 应用于:
+- 其他量化策略的 C++ 加速 → 通用框架: 提取纯计算 → pybind11 加速 → 跨后端一致性验证
 - 不同加速方式之间的对比审查(C++ vs Rust vs Numba vs 纯 NumPy)
 - 建立 "AI 辅助量化策略代码审查 checklist"
 
@@ -508,7 +508,7 @@ pattern_match_single(..., return_details=True)
 | Streamlit 可视化 Web App | **中¹** | 无 | 中 | 高 | 需先实现 debug/trace API(§9.1) |
 | 预编译 Wheel + PyPI 发布 | **中¹** | 无 | 中 | 高 | Python 版本矛盾 + 包布局(§8.1) |
 | 接回回测框架 | 中 | 回测框架 | 中 | 高 | 原始数据/配置不在仓库内 |
-| 扩展到加密货币/美股 | 中 | 新市场数据源+许可 | 中 | 中 | 数据契约待确定 |
+| 扩展到加密货币/A股个股 | 中 | 新市场数据源+许可 | 中 | 中 | 数据契约待确定 |
 | 风控执行层(止损/熔断/调度) | 中 | 无 | 中 | 中 | 需先明确与计算层的接口 |
 | 信号服务器(计算服务层) | 中 | 无 | 中 | 中 | 需定义 API schema |
 | F16-F21 完整集成 | 中-高 | F18/F19 定义+数据源 | 中 | 中 | 缺失特征定义和数据 |

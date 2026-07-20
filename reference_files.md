@@ -38,6 +38,8 @@
 - [docs/performance-analysis.md](docs/performance-analysis.md) — Amdahl 性能分析（英文）
 - [docs/performance-analysis.zh-CN.md](docs/performance-analysis.zh-CN.md) — Amdahl 性能分析（简体中文）
 - [docs/fork-modification-directions.md](docs/fork-modification-directions.md) — Fork 修改方向全景分析（10 大方向）
+- [en/fork-modification-directions.md](en/fork-modification-directions.md) — Fork Modification Directions (English)
+- [zh-Hant/fork-modification-directions.md](zh-Hant/fork-modification-directions.md) — Fork 修改方向全景分析（正體中文）
 - [docs/reviews/initial-plan.zh-CN.md](docs/reviews/initial-plan.zh-CN.md) — 初始设计方案
 - [docs/reviews/revision-plan-v2.zh-CN.md](docs/reviews/revision-plan-v2.zh-CN.md) — 修订方案 v2
 
