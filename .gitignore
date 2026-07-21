@@ -41,3 +41,7 @@ model_cache/
 _review/
 _translation_output.md
 project_status.md
+
+# GitNexus agent files (auto-generated, not for release)
+AGENTS.md
+.claude/
