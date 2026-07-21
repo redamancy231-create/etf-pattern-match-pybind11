@@ -46,3 +46,9 @@
 ## 工具
 - [run_benchmark.py](benchmarks/run_benchmark.py) — 可复现性能基准测试
 - [quickstart.py](examples/quickstart.py) — 快速示例
+
+## GitNexus 集成（2026-07-22）
+- [.gitnexus/run.cjs](.gitnexus/run.cjs) — GitNexus 索引运行器（自动选择可用 runner）
+- [.gitnexus/meta.json](.gitnexus/meta.json) — 索引元数据（stats/文件哈希/capabilities）
+- CLAUDE.md `<!-- gitnexus:start -->` 块 — AI Agent 使用指引（Always Do/Never Do）
+- [~/.claude/skills/gitnexus-*/](~/.claude/skills/) — 7 个全局 GitNexus 技能（exploring/impact-analysis/debugging/refactoring/guide/cli/pr-review）
