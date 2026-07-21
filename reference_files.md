@@ -1,6 +1,6 @@
 # 关键文件索引
 
-> 最后更新: 2026-07-18
+> 最后更新: 2026-07-21
 
 ## 代码
 - [etf_core.cpp](src/cpp/etf_core.cpp) — C++ 统一加速模块（8 函数）
@@ -34,8 +34,9 @@
 - [CLAUDE.md](CLAUDE.md) — 开发笔记与 pybind11 经验
 - [project_status.md](project_status.md) — 项目状态追踪
 - [docs/file-index.md](docs/file-index.md) — 关键文件索引
-- [docs/performance-analysis.md](docs/performance-analysis.md) — Amdahl 性能分析（英文）
-- [docs/performance-analysis.zh-CN.md](docs/performance-analysis.zh-CN.md) — Amdahl 性能分析（简体中文）
+- [docs/performance-analysis.md](docs/performance-analysis.md) — Amdahl 性能分析（简体中文）
+- [en/performance-analysis.md](en/performance-analysis.md) — Amdahl 性能分析（英文）
+- [zh-Hant/performance-analysis.md](zh-Hant/performance-analysis.md) — Amdahl 性能分析（正體中文）
 - [docs/fork-modification-directions.md](docs/fork-modification-directions.md) — Fork 修改方向全景分析（10 大方向）
 - [en/fork-modification-directions.md](en/fork-modification-directions.md) — Fork Modification Directions (English)
 - [zh-Hant/fork-modification-directions.md](zh-Hant/fork-modification-directions.md) — Fork 修改方向全景分析（正體中文）
