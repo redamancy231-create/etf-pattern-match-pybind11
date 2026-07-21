@@ -38,7 +38,7 @@
 
 > ¹ 批量行比较的是 100 次 C++ 单次调用 vs 1 次 C++ 批量调用——衡量批量接口开销降低，非 Python vs C++ 加速比。
 
-> **详细分析**：单次调用 53× 加速落到批量场景只剩 2.2×——这不是 bug，是 Amdahl's Law。见 [性能分析短文](docs/performance-analysis.zh-CN.md)。可复现基准测试方法见 [benchmarks/](benchmarks/)。
+> **详细分析**：单次调用 53× 加速落到批量场景只剩 2.2×——这不是 bug，是 Amdahl's Law。见 [性能分析短文](docs/performance-analysis.md)。可复现基准测试方法见 [benchmarks/](benchmarks/)。
 
 ### 基准测试范围
 
