@@ -4,6 +4,8 @@
 > Model provenance: DeepSeek-V4-Pro (via Claude Code CLI) · Review: GPT-5.6-Sol (via Codex CLI)
 > Based on: Full source code from the project README/CLAUDE.md/src + project_status.md
 > Review report: `_review/conclusions/GPT-5.6-Sol_fork-directions-review_2026-07-21.md`
+>
+> 📖 **Read this in another language**: [简体中文](../docs/fork-modification-directions.md) | [正體中文](../zh-Hant/fork-modification-directions.md)
 
 ## Project Status at a Glance
 

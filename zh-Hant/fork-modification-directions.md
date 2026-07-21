@@ -4,6 +4,8 @@
 > 模型 provenance: DeepSeek-V4-Pro (via Claude Code CLI) · 審查: GPT-5.6-Sol (via Codex CLI)
 > 基於: 項目 README/CLAUDE.md/src 全量源碼 + project_status.md
 > 審查報告: `_review/conclusions/GPT-5.6-Sol_fork-directions-review_2026-07-21.md`
+>
+> 📖 **其他語言版本**: [简体中文](../docs/fork-modification-directions.md) | [English](../en/fork-modification-directions.md)
 
 ## 項目現狀速覽
 
