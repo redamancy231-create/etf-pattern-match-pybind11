@@ -31,8 +31,9 @@
 - [CLAUDE.md](../CLAUDE.md) — 开发笔记与 pybind11 经验 | Development notes and pybind11 lessons
 - [project_status.md](../project_status.md) — 项目状态 | Project status
 - [docs/file-index.md](file-index.md) — 本文件 | This file
-- [docs/performance-analysis.md](performance-analysis.md) — Amdahl 性能分析（英文）| Amdahl performance analysis (English)
-- [docs/performance-analysis.zh-CN.md](performance-analysis.zh-CN.md) — Amdahl 性能分析（简体中文）
+- [docs/performance-analysis.md](performance-analysis.md) — Amdahl 性能分析（简体中文）| Amdahl performance analysis (Simplified Chinese)
+- [en/performance-analysis.md](../en/performance-analysis.md) — Amdahl 性能分析（英文）| Amdahl performance analysis (English)
+- [zh-Hant/performance-analysis.md](../zh-Hant/performance-analysis.md) — Amdahl 性能分析（正體中文）| Amdahl performance analysis (Traditional Chinese)
 
 ## 设计文档（中文）| Design Documents (Chinese)
 - [初始方案 Initial plan (zh-CN)](reviews/initial-plan.zh-CN.md) — 初始设计提案 | Initial design proposal

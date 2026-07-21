@@ -21,7 +21,7 @@
 - 8-function unified C++ acceleration module (`src/cpp/etf_core.cpp`, ~1,100 lines)
 - 54 unit tests + 2 verification scripts
 - Interactive Jupyter demo notebook (31 cells, GPT-5.6-Sol reviewed)
-- Performance analysis article (`docs/performance-analysis.md` + `docs/performance-analysis.zh-CN.md`, bilingual split)
+- Performance analysis article (trilingual: `docs/performance-analysis.md` + `en/performance-analysis.md` + `zh-Hant/performance-analysis.md`)
 - 4-round Kimi + GPT-5.5 cross-backend independent review
 - CI: GitHub Actions (Windows, MSVC Release)
 - Bilingual README (Chinese + English)
