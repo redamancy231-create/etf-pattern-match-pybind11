@@ -38,7 +38,7 @@
 
 > ¹ 批次項目比較 100 次單筆 C++ 呼叫與 1 次 C++ 批次呼叫；此數值衡量的是批次介面額外成本的降低，而非 Python 與 C++ 的加速比。
 
-> **詳細分析**：單次呼叫的 53× 加速，在批次情境中僅剩 2.2×——這不是 bug，而是 Amdahl's Law 的結果。見 [效能分析短文](../docs/performance-analysis.zh-CN.md)。可重現的基準測試方法見 [benchmarks/](../benchmarks/)。
+> **詳細分析**：單次呼叫的 53× 加速，在批次情境中僅剩 2.2×——這不是 bug，而是 Amdahl's Law 的結果。見 [效能分析短文](../docs/performance-analysis.md)。可重現的基準測試方法見 [benchmarks/](../benchmarks/)。
 
 ### 基準測試範圍
 
